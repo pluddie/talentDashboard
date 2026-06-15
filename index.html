@@ -1,792 +1,850 @@
 <!DOCTYPE html>
-<html lang="zh-TW">
+<html lang="zh-TW" data-theme="light">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>人才儀表板</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <style>
 :root {
-  --glass: rgba(255,255,255,0.55);
-  --glass-hdr: rgba(255,255,255,0.65);
-  --glass-border: rgba(180,210,255,0.35);
-  --text-primary: #0d1b3e;
-  --text-secondary: #3a5080;
-  --text-muted: #7a90b8;
-  --accent: #1a6fdb;
-  --accent2: #3b82f6;
-  --header-glass: rgba(255,255,255,0.72);
-  --org-line: rgba(96,165,250,0.55);
-  --shadow: 0 4px 24px rgba(80,130,220,0.10);
+  --fs-xl:   20px;
+  --fs-lg:   16px;
+  --fs-md:   14px;
+  --fs-sm:   12px;
+  --fs-xs:   11px;
+  --bg:          linear-gradient(135deg,#e8f0fe 0%,#f0f7ff 45%,#e3f0fb 100%);
+  --blur1:       radial-gradient(ellipse at 20% 30%,rgba(99,155,255,.16) 0%,transparent 60%);
+  --blur2:       radial-gradient(ellipse at 80% 70%,rgba(130,180,255,.12) 0%,transparent 55%);
+  --glass:       rgba(255,255,255,.60);
+  --glass-hdr:   rgba(255,255,255,.82);
+  --glass-bdr:   rgba(255,255,255,.75);
+  --page-hdr:    rgba(255,255,255,.72);
+  --text:        #1a2540;
+  --text-sub:    #4a5c80;
+  --text-muted:  #7a90b8;
+  --accent:      #2563eb;
+  --accent-lt:   rgba(37,99,235,.10);
+  --accent-md:   rgba(37,99,235,.18);
+  --accent2:     #60a5fa;
+  --divider:     rgba(37,99,235,.10);
+  --hdr-title:   #1e3a6e;
 }
-body.dark {
-  --glass: rgba(14,24,58,0.62);
-  --glass-hdr: rgba(10,18,50,0.75);
-  --glass-border: rgba(80,120,220,0.22);
-  --text-primary: #e4eaf8;
-  --text-secondary: #8aaad0;
-  --text-muted: #4a6080;
-  --accent: #60a5fa;
-  --accent2: #93c5fd;
-  --header-glass: rgba(8,14,40,0.80);
-  --org-line: rgba(96,165,250,0.35);
-  --shadow: 0 4px 24px rgba(0,0,0,0.35);
-}
-* { box-sizing:border-box; margin:0; padding:0; }
-body { font-family:'Segoe UI','Microsoft JhengHei',Arial,sans-serif; height:100vh; overflow:hidden; color:var(--text-primary); position:relative; transition:color 0.3s; }
-
-/* BG */
-.bg-layer { position:fixed; inset:0; z-index:0; background:#f4f8ff; transition:background 0.5s; }
-body.dark .bg-layer { background:#050c20; }
-.bg-blob { position:fixed; border-radius:50%; filter:blur(90px); z-index:0; pointer-events:none; transition:all 0.5s; }
-.bg-blob1 { width:700px; height:700px; top:-200px; left:-120px; background:radial-gradient(circle,rgba(147,197,253,0.45) 0%,transparent 70%); }
-.bg-blob2 { width:550px; height:550px; bottom:-120px; right:3%; background:radial-gradient(circle,rgba(186,220,255,0.38) 0%,transparent 70%); }
-.bg-blob3 { width:450px; height:450px; top:20%; left:28%; background:radial-gradient(circle,rgba(219,234,254,0.5) 0%,transparent 70%); }
-body.dark .bg-blob1 { background:radial-gradient(circle,rgba(26,58,122,0.7) 0%,transparent 70%); }
-body.dark .bg-blob2 { background:radial-gradient(circle,rgba(13,35,85,0.6) 0%,transparent 70%); }
-body.dark .bg-blob3 { background:radial-gradient(circle,rgba(21,45,106,0.5) 0%,transparent 70%); }
-
-/* GLASS */
-.glass-card { background:var(--glass); backdrop-filter:blur(20px) saturate(1.8); -webkit-backdrop-filter:blur(20px) saturate(1.8); border-radius:14px; border:1px solid var(--glass-border); box-shadow:var(--shadow); overflow:hidden; display:flex; flex-direction:column; transition:background 0.3s,border-color 0.3s; }
-.card-hdr { padding:7px 14px 6px; font-size:10px; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; color:var(--text-secondary); background:var(--glass-hdr); border-bottom:1px solid var(--glass-border); flex-shrink:0; }
-
-/* SIDEBAR */
-.sidebar-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.28); z-index:100; }
-.sidebar-overlay.open { display:block; }
-.sidebar { position:fixed; top:0; right:-310px; width:290px; height:100vh; z-index:101; background:rgba(8,16,48,0.92); backdrop-filter:blur(28px); -webkit-backdrop-filter:blur(28px); border-left:1px solid rgba(80,120,220,0.18); transition:right 0.35s cubic-bezier(.4,0,.2,1); display:flex; flex-direction:column; }
-.sidebar.open { right:0; }
-.sidebar-hdr { padding:18px 22px 14px; border-bottom:1px solid rgba(255,255,255,0.07); display:flex; align-items:center; justify-content:space-between; }
-.sidebar-hdr span { color:#c8d8f0; font-size:14px; font-weight:600; }
-.sidebar-close { background:none; border:none; color:#5a78a8; cursor:pointer; width:28px; height:28px; display:flex; align-items:center; justify-content:center; border-radius:6px; transition:all 0.2s; }
-.sidebar-close:hover { background:rgba(255,255,255,0.08); color:#c8d8f0; }
-.sidebar-close svg { width:14px; height:14px; stroke:currentColor; fill:none; stroke-width:2; stroke-linecap:round; }
-.sidebar-body { padding:22px; display:flex; flex-direction:column; gap:22px; flex:1; overflow-y:auto; }
-.sb-label { color:#4a6a9a; font-size:10px; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; margin-bottom:8px; }
-.toggle-row { display:flex; align-items:center; justify-content:space-between; }
-.toggle-row-label { display:flex; align-items:center; gap:8px; font-size:13px; color:#8aaad0; font-weight:500; }
-.toggle-switch { position:relative; width:44px; height:24px; flex-shrink:0; }
-.toggle-switch input { opacity:0; width:0; height:0; }
-.toggle-track { position:absolute; inset:0; border-radius:24px; background:rgba(60,90,150,0.35); border:1px solid rgba(80,120,200,0.3); cursor:pointer; transition:background 0.25s; }
-.toggle-track::after { content:''; position:absolute; top:3px; left:3px; width:16px; height:16px; border-radius:50%; background:#5a7aa8; transition:transform 0.25s,background 0.25s; }
-.toggle-switch input:checked + .toggle-track { background:linear-gradient(135deg,#1a6fdb,#3b82f6); border-color:#3b82f6; }
-.toggle-switch input:checked + .toggle-track::after { transform:translateX(20px); background:#fff; }
-.export-btn { width:100%; padding:11px; border-radius:9px; background:linear-gradient(135deg,#1a6fdb,#0d47a1); color:#fff; border:none; cursor:pointer; font-size:13px; font-weight:700; display:flex; align-items:center; justify-content:center; gap:7px; transition:opacity 0.2s; }
-.export-btn:hover { opacity:0.88; }
-.export-btn svg { width:15px; height:15px; stroke:currentColor; fill:none; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
-
-/* HEADER */
-.dash-header { position:relative; z-index:10; height:42px; padding:0 16px; background:var(--header-glass); backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px); border-bottom:1px solid var(--glass-border); display:flex; align-items:center; justify-content:space-between; flex-shrink:0; }
-.hdr-title { font-size:13px; font-weight:700; letter-spacing:0.06em; color:var(--text-primary); display:flex; align-items:center; gap:9px; }
-.hdr-dot { width:7px; height:7px; border-radius:50%; background:var(--accent2); flex-shrink:0; }
-.settings-btn { background:rgba(255,255,255,0.4); border:1px solid rgba(180,210,255,0.5); color:var(--text-secondary); border-radius:8px; padding:5px 10px; cursor:pointer; display:flex; align-items:center; gap:5px; transition:background 0.2s; }
-.settings-btn:hover { background:rgba(255,255,255,0.65); }
-body.dark .settings-btn { background:rgba(255,255,255,0.07); border-color:rgba(80,120,220,0.25); }
-.settings-btn svg { width:15px; height:15px; stroke:var(--text-secondary); fill:none; stroke-width:1.6; stroke-linecap:round; stroke-linejoin:round; }
-
-/* ===== DESKTOP LAYOUT =====
-   Left col: 280px wide, row1=intro(40%), row2=org(60%)
-   Right: row1=rot+radar, row2=match
-*/
-.dash-body {
-  position:relative; z-index:5;
-  height:calc(100vh - 42px);
-  display:grid;
-  grid-template-columns: 280px 1fr;
-  grid-template-rows: 42% 58%;
-  gap:8px; padding:8px; overflow:hidden;
-}
-.left-col { grid-column:1; grid-row:1/3; display:flex; flex-direction:column; gap:8px; overflow:hidden; min-height:0; }
-.top-right { grid-column:2; grid-row:1; display:flex; gap:8px; overflow:hidden; min-height:0; }
-.bot-right { grid-column:2; grid-row:2; overflow:hidden; min-height:0; display:flex; flex-direction:column; }
-
-/* intro = 40% of left-col height */
-.panel-intro { flex:0 0 40%; min-height:0; }
-.panel-intro .card-body { flex:1; overflow-y:auto; display:flex; flex-direction:column; gap:7px; padding:10px 12px; }
-/* org = rest */
-.panel-org { flex:1; min-height:0; }
-.panel-org .card-body { flex:1; overflow-y:auto; padding:10px 10px 6px; display:flex; flex-direction:column; align-items:center; }
-
-/* MOBILE */
-@media (max-width:768px) {
-  body { height:auto; overflow:auto; }
-  .dash-body { height:auto; overflow:visible; display:flex; flex-direction:column; gap:10px; padding:10px; }
-  .left-col { overflow:visible; min-height:unset; }
-  .top-right { flex-direction:column; overflow:visible; min-height:unset; }
-  .bot-right { overflow:visible; min-height:unset; }
-  .panel-intro { order:1; flex:unset; }
-  .panel-org { order:2; flex:unset; }
-  .panel-radar { order:3; }
-  .panel-rot { order:4; }
-  .panel-match { order:5; }
-  .glass-card { min-height:unset; }
-  .panel-intro .card-body,.panel-org .card-body { max-height:none; }
-  .panel-radar .card-body { min-height:480px; }
-  .panel-rot .card-body { min-height:160px; }
-  .panel-match .card-body { min-height:360px; }
-  .radar-top { flex-direction:column !important; }
-  .matrix-section { flex:unset !important; width:100% !important; }
-  .match-grid { grid-template-columns:1fr !important; }
-  .perf-grid { grid-template-columns:repeat(3,1fr) !important; }
+[data-theme="dark"] {
+  --bg:          linear-gradient(135deg,#0b1120 0%,#0f1a30 45%,#101828 100%);
+  --blur1:       radial-gradient(ellipse at 20% 30%,rgba(37,99,235,.22) 0%,transparent 60%);
+  --blur2:       radial-gradient(ellipse at 80% 70%,rgba(96,165,250,.14) 0%,transparent 55%);
+  --glass:       rgba(15,25,50,.60);
+  --glass-hdr:   rgba(15,25,50,.85);
+  --glass-bdr:   rgba(255,255,255,.10);
+  --page-hdr:    rgba(12,20,42,.80);
+  --text:        #e2eafc;
+  --text-sub:    #94afd4;
+  --text-muted:  #5b7aa8;
+  --accent:      #60a5fa;
+  --accent-lt:   rgba(96,165,250,.12);
+  --accent-md:   rgba(96,165,250,.22);
+  --accent2:     #93c5fd;
+  --divider:     rgba(96,165,250,.12);
+  --hdr-title:   #93c5fd;
 }
 
-/* INTRO */
-.pic-area { display:flex; flex-direction:column; align-items:center; gap:5px; }
-.pic-wrap { width:68px; height:68px; border-radius:50%; background:linear-gradient(135deg,rgba(96,165,250,0.25),rgba(59,130,246,0.15)); border:2.5px solid rgba(255,255,255,0.7); display:flex; align-items:center; justify-content:center; font-size:32px; overflow:hidden; cursor:pointer; position:relative; flex-shrink:0; }
-.pic-wrap img { width:100%; height:100%; object-fit:cover; }
-.pic-wrap:hover::after { content:'上傳'; position:absolute; inset:0; background:rgba(26,111,219,0.5); display:flex; align-items:center; justify-content:center; color:#fff; font-size:11px; border-radius:50%; }
-#fileInput { display:none; }
-.edit-inp { width:100%; border:none; border-bottom:1.5px solid transparent; background:transparent; color:var(--text-primary); font-family:inherit; font-size:12px; padding:2px; cursor:pointer; outline:none; transition:border-color 0.2s; }
-.edit-inp:focus { border-bottom-color:var(--accent); cursor:text; }
-.name-inp { font-size:15px; font-weight:700; text-align:center; }
-.center-inp { text-align:center; color:var(--text-secondary); }
-.f-row { display:flex; flex-direction:column; gap:2px; }
-.f-lbl { font-size:9px; color:var(--text-muted); font-weight:700; text-transform:uppercase; letter-spacing:0.07em; }
-.org-btn { display:inline-flex; align-items:center; gap:4px; background:rgba(96,165,250,0.12); color:var(--accent); border:1px solid rgba(96,165,250,0.3); border-radius:20px; padding:3px 11px; font-size:11px; font-weight:600; cursor:pointer; transition:background 0.2s; }
-.org-btn:hover { background:rgba(96,165,250,0.22); }
-.org-inp-edit { display:none; width:100%; border:1px solid rgba(96,165,250,0.4); border-radius:6px; padding:4px 8px; font-size:11px; background:rgba(255,255,255,0.4); color:var(--text-primary); outline:none; }
-.org-inp-edit.show { display:block; }
-.perf-grid { display:grid; grid-template-columns:repeat(5,1fr); gap:3px; }
-.perf-cell { background:rgba(255,255,255,0.4); border-radius:6px; padding:4px 2px; display:flex; flex-direction:column; align-items:center; gap:1px; border:1px solid rgba(180,210,255,0.4); }
-body.dark .perf-cell { background:rgba(255,255,255,0.07); border-color:rgba(80,120,200,0.2); }
-.perf-yr { font-size:9px; color:var(--text-muted); font-weight:600; }
-.perf-sel { background:transparent; border:none; color:var(--accent2); font-size:12px; font-weight:800; cursor:pointer; outline:none; font-family:inherit; }
-.pc-list { display:flex; flex-direction:column; gap:3px; }
-.pc-item { display:flex; align-items:center; gap:5px; }
-.pc-sign-btn { width:15px; height:15px; border-radius:3px; border:none; cursor:pointer; font-size:11px; display:flex; align-items:center; justify-content:center; font-weight:800; flex-shrink:0; }
-.pc-sign-btn.plus { background:rgba(34,197,94,0.2); color:#16a34a; }
-.pc-sign-btn.minus { background:rgba(239,68,68,0.18); color:#dc2626; }
-body.dark .pc-sign-btn.plus { background:rgba(34,197,94,0.15); color:#4ade80; }
-body.dark .pc-sign-btn.minus { background:rgba(239,68,68,0.15); color:#f87171; }
-.pc-text { flex:1; border:none; background:transparent; color:var(--text-primary); font-family:inherit; font-size:11px; outline:none; cursor:pointer; border-bottom:1px solid transparent; transition:border-color 0.2s; }
-.pc-text:focus { border-bottom-color:var(--accent); cursor:text; }
-.pc-add-btn { font-size:10px; color:var(--text-muted); background:rgba(255,255,255,0.3); border:1px dashed rgba(180,210,255,0.5); border-radius:5px; padding:3px 8px; cursor:pointer; width:100%; margin-top:2px; }
-body.dark .pc-add-btn { background:rgba(255,255,255,0.06); border-color:rgba(80,120,200,0.3); }
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{width:100%;height:100%;overflow:hidden;
+  font-family:'Segoe UI','PingFang TC','Noto Sans TC',sans-serif;
+  font-size:var(--fs-md);color:var(--text)}
+body{background:var(--bg);position:relative}
+body::before{content:'';position:fixed;inset:0;
+  background:var(--blur1),var(--blur2);pointer-events:none;z-index:0}
 
-/* ORG CHART */
-.org-chart { display:flex; flex-direction:column; align-items:center; width:100%; }
-.org-vline { width:2px; height:10px; background:var(--org-line); margin:0 auto; flex-shrink:0; }
-.org-row { display:flex; justify-content:center; width:100%; }
-/* org box: wider, shorter, no border, no role label */
-.org-box {
-  border-radius:8px; padding:5px 14px; text-align:center;
-  min-width:80px; max-width:140px;
-  background:rgba(255,255,255,0.5); border:none;
-  cursor:pointer; transition:all 0.2s; position:relative;
+/* ═══ LAYOUT SHELL ═══ */
+#app{position:relative;z-index:1;width:100vw;height:100vh;
+  display:flex;flex-direction:column;padding:8px;gap:6px}
+
+#page-header{
+  flex-shrink:0;display:flex;align-items:center;justify-content:space-between;
+  padding:0 14px;height:44px;background:var(--page-hdr);
+  backdrop-filter:blur(20px) saturate(1.5);-webkit-backdrop-filter:blur(20px) saturate(1.5);
+  border:1px solid var(--glass-bdr);border-radius:14px;
+  box-shadow:0 2px 14px rgba(37,99,235,.07);
 }
-body.dark .org-box { background:rgba(30,55,120,0.5); }
-.org-box:hover { background:rgba(255,255,255,0.75); }
-.org-box.me { background:linear-gradient(135deg,rgba(26,111,219,0.72),rgba(59,130,246,0.62)); }
-.org-nm { font-size:11px; font-weight:600; color:var(--text-primary); border:none; background:transparent; text-align:center; width:100%; outline:none; cursor:pointer; font-family:inherit; }
-.org-nm:focus { border-bottom:1px solid var(--accent); cursor:text; }
-.org-nm.me { color:#fff; }
-.org-desc-inp { font-size:9.5px; color:var(--text-muted); border:none; background:transparent; text-align:center; width:100%; outline:none; cursor:pointer; font-family:inherit; border-bottom:1px solid transparent; transition:border-color 0.2s; margin-top:1px; }
-.org-desc-inp:focus { border-bottom-color:var(--accent); cursor:text; }
-.org-box.me .org-desc-inp { color:rgba(255,255,255,0.65); }
-.remove-node-btn { font-size:9px; color:rgba(239,68,68,0.65); background:none; border:none; cursor:pointer; padding:1px 2px; position:absolute; top:2px; right:3px; }
-.remove-node-btn:hover { color:#ef4444; }
-.add-member-btn { font-size:10px; color:var(--accent); background:rgba(96,165,250,0.1); border:1px dashed rgba(96,165,250,0.35); border-radius:6px; padding:3px 10px; cursor:pointer; margin-top:6px; align-self:center; }
-.add-member-btn:hover { background:rgba(96,165,250,0.2); }
-/* horizontal bar for siblings */
-.org-hbar { height:2px; background:var(--org-line); margin:0 auto; }
-.org-sibling-row { display:flex; justify-content:space-around; width:100%; }
-.org-node-wrap { display:flex; flex-direction:column; align-items:center; }
+#page-header-left{display:flex;align-items:baseline;gap:10px}
+#page-title-zh{font-size:var(--fs-xl);font-weight:800;color:var(--hdr-title);letter-spacing:.03em}
+#page-title-en{font-size:var(--fs-sm);font-weight:600;color:var(--text-muted);letter-spacing:.08em;text-transform:uppercase}
+#settings-btn{width:34px;height:34px;border-radius:9px;border:none;cursor:pointer;
+  background:var(--accent-lt);color:var(--accent);display:flex;align-items:center;justify-content:center;transition:background .15s}
+#settings-btn:hover{background:var(--accent-md)}
+#settings-btn svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 
-/* ROTATION — fixed 5 rows */
-.panel-rot { flex:0 0 200px; min-width:0; }
-.panel-rot .card-body { flex:1; display:flex; flex-direction:column; padding:10px; gap:0; }
-.rot-row { display:flex; align-items:center; gap:8px; padding:0 4px; flex:1; border-bottom:1px solid var(--glass-border); }
-.rot-row:last-child { border-bottom:none; }
-.rot-key { font-size:10px; font-weight:700; color:var(--text-muted); white-space:nowrap; min-width:40px; }
-.rot-val { flex:1; border:none; background:transparent; color:var(--text-primary); font-family:inherit; font-size:11px; outline:none; padding:2px 0; }
-.rot-val::placeholder { color:var(--text-muted); opacity:0.6; }
+/* rows — top taller, bottom shorter */
+.row{display:flex;gap:6px;min-height:0}
+.row-top{flex:46 1 0}
+.row-bot{flex:54 1 0}
 
-/* RADAR + MATRIX */
-.panel-radar { flex:1; min-width:0; }
-.panel-radar .card-body { flex:1; display:flex; padding:8px; gap:8px; overflow:hidden; }
-.radar-top { display:flex; gap:8px; flex:1; min-height:0; }
+/* col widths */
+.cell-intro   {flex:4;min-width:0}
+.cell-rotation{flex:2.2;min-width:0}
+.cell-radar   {flex:3.8;min-width:0}
+.cell-org  {flex:4;min-width:0}
+.cell-match{flex:6;min-width:0}
 
-/* radar section: smaller */
-.radar-section { display:flex; flex-direction:column; gap:4px; flex:0 0 48%; min-width:0; min-height:0; }
-.radar-canvas-wrap { flex:1; min-width:0; min-height:0; position:relative; cursor:pointer; }
-.radar-ctrl-panel { display:none; flex-direction:column; gap:3px; background:rgba(255,255,255,0.35); border-radius:8px; padding:6px; }
-body.dark .radar-ctrl-panel { background:rgba(20,40,100,0.35); }
-.radar-ctrl-panel.show { display:flex; }
-.r-ctrl-row { display:flex; align-items:center; gap:5px; }
-.r-ctrl-lbl { font-size:9.5px; color:var(--text-muted); min-width:46px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-.r-slider { flex:1; accent-color:var(--accent); }
-.r-ctrl-val { font-size:10px; font-weight:700; color:var(--accent2); min-width:14px; text-align:right; }
+/* ═══ GLASS CARD ═══ */
+.card{height:100%;background:var(--glass);
+  backdrop-filter:blur(18px) saturate(1.4);-webkit-backdrop-filter:blur(18px) saturate(1.4);
+  border:1px solid var(--glass-bdr);border-radius:14px;overflow:hidden;
+  display:flex;flex-direction:column;
+  box-shadow:0 4px 20px rgba(37,99,235,.06),0 1px 4px rgba(0,0,0,.04)}
+.card-hdr{flex-shrink:0;display:flex;align-items:center;padding:7px 12px 6px;
+  background:var(--glass-hdr);border-bottom:1px solid var(--divider)}
+.card-title{font-size:var(--fs-lg);font-weight:700;color:var(--hdr-title);letter-spacing:.04em}
+.card-body{flex:1;min-height:0;padding:8px 12px;overflow:hidden;display:flex;flex-direction:column;gap:0}
 
-/* matrix section: larger */
-.matrix-section { display:flex; flex-direction:column; gap:4px; flex:1; min-width:0; }
-.matrix-inner-wrap { flex:1; display:flex; align-items:stretch; gap:4px; min-height:0; }
-.arrow-svg { stroke:var(--text-muted); fill:none; }
+/* ═══ EDITABLE ═══ */
+[contenteditable="true"]{outline:none;cursor:text;border-radius:4px;transition:background .15s;min-width:16px;display:inline-block}
+[contenteditable="true"]:hover{background:rgba(37,99,235,.07)}
+[contenteditable="true"]:focus{background:rgba(37,99,235,.12)}
 
-/* 3x3 grid */
-.matrix-grid { display:grid; grid-template-columns:repeat(3,1fr); grid-template-rows:repeat(3,1fr); gap:3px; flex:1; min-height:0; position:relative; }
-.mcell { border-radius:5px; display:flex; align-items:center; justify-content:center; text-align:center; padding:3px; }
-.mcell input { width:100%; border:none; background:transparent; text-align:center; font-family:inherit; font-size:9px; outline:none; cursor:pointer; font-weight:700; border-bottom:1px solid transparent; }
-.mcell input:focus { border-bottom-color:rgba(255,255,255,0.6); cursor:text; }
+.grp{display:flex;flex-direction:column;gap:3px}
+.grp+.grp{margin-top:6px;padding-top:6px;border-top:1px solid var(--divider)}
 
-/* Colors: row0-col0=観察=white, row0-col1=潛力=blue2, row0-col2=明星=blue3(deepest)
-   row1-col0=改善=white, row1-col1=中堅=blue1(lightest), row1-col2=核心=blue2
-   row2-col0=淘汰=white, row2-col1=穩定=white, row2-col2=業務=white */
-.mc-00 { background:#ffffff; }  .mc-00 input { color:#334155; }
-.mc-01 { background:rgba(37,99,235,0.30); }  .mc-01 input { color:#1e3a8a; }
-.mc-02 { background:rgba(37,99,235,0.62); }  .mc-02 input { color:#fff; }
-.mc-10 { background:#ffffff; }  .mc-10 input { color:#334155; }
-.mc-11 { background:rgba(37,99,235,0.12); }  .mc-11 input { color:#1e40af; }
-.mc-12 { background:rgba(37,99,235,0.35); }  .mc-12 input { color:#1e3a8a; }
-.mc-20 { background:#ffffff; }  .mc-20 input { color:#334155; }
-.mc-21 { background:#ffffff; }  .mc-21 input { color:#334155; }
-.mc-22 { background:#ffffff; }  .mc-22 input { color:#334155; }
+/* ═══════════════════════════════
+   1. 人才介紹 — no card title
+   Left: photo + perf   Right: name/major/pros
+═══════════════════════════════ */
+/* Hide card header for intro */
+.cell-intro .card-hdr { display:none; }
 
-body.dark .mc-00 { background:rgba(255,255,255,0.06); } body.dark .mc-00 input { color:#94a3b8; }
-body.dark .mc-01 { background:rgba(59,130,246,0.32); } body.dark .mc-01 input { color:#bfdbfe; }
-body.dark .mc-02 { background:rgba(59,130,246,0.62); } body.dark .mc-02 input { color:#fff; }
-body.dark .mc-10 { background:rgba(255,255,255,0.06); } body.dark .mc-10 input { color:#94a3b8; }
-body.dark .mc-11 { background:rgba(59,130,246,0.14); } body.dark .mc-11 input { color:#93c5fd; }
-body.dark .mc-12 { background:rgba(59,130,246,0.38); } body.dark .mc-12 input { color:#bfdbfe; }
-body.dark .mc-20 { background:rgba(255,255,255,0.06); } body.dark .mc-20 input { color:#94a3b8; }
-body.dark .mc-21 { background:rgba(255,255,255,0.06); } body.dark .mc-21 input { color:#94a3b8; }
-body.dark .mc-22 { background:rgba(255,255,255,0.06); } body.dark .mc-22 input { color:#94a3b8; }
+#intro-body{display:flex;gap:12px;flex:1;min-height:0;padding:8px 12px}
 
-/* dot & scatter ctrl */
-.dot-indicator { position:absolute; width:12px; height:12px; background:#1a6fdb; border:2.5px solid #fff; border-radius:50%; transform:translate(-50%,-50%); pointer-events:none; transition:left 0.25s,top 0.25s; box-shadow:0 0 8px rgba(26,111,219,0.7); display:none; z-index:5; }
-.scatter-ctrl-panel { display:none; flex-direction:row; gap:8px; align-items:center; justify-content:center; background:rgba(255,255,255,0.3); border-radius:8px; padding:4px 10px; }
-body.dark .scatter-ctrl-panel { background:rgba(20,40,100,0.3); }
-.scatter-ctrl-panel.show { display:flex; }
-.sc-ctrl { display:flex; flex-direction:column; align-items:center; gap:1px; }
-.sc-ctrl label { font-size:9px; color:var(--text-muted); }
-.sc-ctrl input[type=range] { width:55px; accent-color:var(--accent); }
-.sc-ctrl span { font-size:10px; font-weight:700; color:var(--accent2); }
+/* Left col: photo on top, perf below */
+#intro-left{
+  flex-shrink:0;display:flex;flex-direction:column;align-items:center;gap:8px;
+  min-width:80px;
+}
+#profile-pic{
+  width:72px;height:72px;border-radius:50%;
+  background:var(--accent-lt);
+  display:flex;align-items:center;justify-content:center;
+  font-size:38px;cursor:pointer;
+  border:2px solid var(--glass-bdr);overflow:hidden;
+  transition:box-shadow .2s;flex-shrink:0;
+}
+#profile-pic:hover{box-shadow:0 0 0 3px var(--accent2)}
+#profile-pic img{width:100%;height:100%;object-fit:cover}
+#pic-input{display:none}
 
-/* MATCH */
-.panel-match { flex:1; min-height:0; }
-.panel-match .card-body { flex:1; padding:8px; overflow:hidden; }
-.match-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; height:100%; }
-.match-col { display:flex; flex-direction:column; min-height:0; overflow:hidden; }
-.match-title { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.07em; color:var(--accent2); padding:0 0 4px 1px; margin-bottom:4px; border-bottom:1.5px solid rgba(96,165,250,0.3); flex-shrink:0; }
-.match-items { display:flex; flex-direction:column; gap:2px; overflow:hidden; }
-.match-row { display:flex; align-items:center; gap:5px; padding:2px 0; }
-.lamp-sq { width:13px; height:13px; border-radius:2px; cursor:pointer; flex-shrink:0; transition:transform 0.15s; }
-.lamp-sq:hover { transform:scale(1.2); }
-.lamp-sq.green{background:#22c55e;} .lamp-sq.yellow{background:#f59e0b;} .lamp-sq.red{background:#ef4444;} .lamp-sq.gray{background:#9ca3af;}
-.lamp-sq.none { background:rgba(200,210,230,0.3); border:1.5px dashed rgba(150,170,210,0.6); }
-body.dark .lamp-sq.none { background:rgba(255,255,255,0.06); border-color:rgba(100,130,180,0.4); }
-.match-inp { flex:1; border:none; background:transparent; color:var(--text-primary); font-family:inherit; font-size:10.5px; outline:none; cursor:pointer; border-bottom:1px solid transparent; transition:border-color 0.2s; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; min-width:0; }
-.match-inp:focus { border-bottom-color:var(--accent); cursor:text; white-space:normal; }
+/* perf below photo */
+#perf-block{display:flex;flex-direction:column;align-items:center;gap:4px;width:100%}
+#perf-block-label{font-size:var(--fs-xs);color:var(--text-muted);font-weight:600;letter-spacing:.05em}
+#perf-row{display:flex;gap:5px;align-items:flex-end;flex-wrap:wrap;justify-content:center}
+.perf-item{display:flex;flex-direction:column;align-items:center;gap:2px}
+.perf-yr{font-size:var(--fs-xs);color:var(--text-muted);font-weight:600}
+.perf-grade{
+  font-size:var(--fs-sm);padding:2px 7px;border-radius:7px;
+  border:1px solid var(--glass-bdr);background:var(--accent-lt);
+  cursor:pointer;color:var(--text);font-weight:700;
+  appearance:none;-webkit-appearance:none;outline:none;
+}
 
-/* LAMP MENU */
-.lamp-menu { display:none; position:fixed; background:rgba(255,255,255,0.88); border:1px solid rgba(200,220,255,0.5); border-radius:9px; backdrop-filter:blur(18px); box-shadow:0 8px 30px rgba(80,130,220,0.15); padding:6px; z-index:200; flex-direction:row; gap:4px; }
-body.dark .lamp-menu { background:rgba(12,24,65,0.92); border-color:rgba(80,120,220,0.35); }
-.lamp-menu.show { display:flex; }
-.lamp-opt { width:18px; height:18px; border-radius:3px; cursor:pointer; transition:transform 0.15s; }
-.lamp-opt:hover { transform:scale(1.2); }
-.lamp-opt.green{background:#22c55e;} .lamp-opt.yellow{background:#f59e0b;} .lamp-opt.red{background:#ef4444;} .lamp-opt.gray{background:#9ca3af;}
-.lamp-opt.none { background:transparent; border:1.5px dashed #9ca3af; }
+/* Right col: name, major, org tag, pros&cons */
+#intro-details{flex:1;min-width:0;display:flex;flex-direction:column;overflow:auto}
+#talent-name{font-size:var(--fs-xl);font-weight:800;color:var(--accent);line-height:1.15}
+#talent-major{font-size:var(--fs-md);color:var(--text-sub)}
+#talent-org{
+  display:inline-block;padding:2px 12px;
+  background:var(--accent-lt);color:var(--accent);
+  border-radius:999px;font-size:var(--fs-sm);font-weight:700;cursor:text;
+}
+#pc-list{display:flex;flex-direction:column;gap:3px}
+.pc-item{display:flex;align-items:center;gap:6px}
+.pc-toggle{
+  width:16px;height:16px;border-radius:50%;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  font-size:13px;font-weight:700;cursor:pointer;user-select:none;
+  transition:background .15s;line-height:1;
+}
+.pc-toggle.plus {background:rgba(34,197,94,.18);color:#16a34a}
+.pc-toggle.minus{background:rgba(239,68,68,.18);color:#dc2626}
+.pc-text{flex:1;font-size:var(--fs-md);color:var(--text)}
+#pc-add-btn{
+  margin-top:3px;align-self:flex-start;
+  font-size:var(--fs-xs);padding:2px 10px;border-radius:6px;border:none;
+  background:var(--accent-lt);color:var(--accent);cursor:pointer;font-weight:600;
+}
+#pc-add-btn:hover{background:var(--accent-md)}
 
-::-webkit-scrollbar { width:3px; }
-::-webkit-scrollbar-track { background:transparent; }
-::-webkit-scrollbar-thumb { background:rgba(150,170,220,0.3); border-radius:2px; }
+/* ═══════════════════════════════
+   輪崗紀錄
+═══════════════════════════════ */
+#rotation-list{flex:1;display:flex;flex-direction:column;justify-content:space-evenly}
+.rot-item{display:flex;align-items:baseline;gap:4px}
+.rot-label{font-size:var(--fs-sm);color:var(--text-sub);font-weight:700;white-space:nowrap;min-width:46px}
+/* same size as --fs-md */
+.rot-val{font-size:var(--fs-md);color:var(--text)}
+.rot-val[contenteditable]::before{
+  content:attr(data-ph);
+  color:var(--text-muted);
+  display:none;
+}
+.rot-val[contenteditable]:empty::before{display:inline}
+
+/* ═══════════════════════════════
+   綜合評比
+═══════════════════════════════ */
+#radar-scatter-wrap{flex:1;display:flex;gap:6px;min-height:0;align-items:stretch}
+#radar-wrap{
+  flex:1;min-width:0;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;position:relative;cursor:pointer;
+}
+#radar-svg{width:100%;height:100%;overflow:visible;display:block}
+
+/* radar popup — anchored INSIDE the card, not fixed */
+#radar-popup{
+  display:none;
+  position:absolute;top:4px;left:4px;right:4px;
+  background:var(--glass-hdr);
+  backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+  border:1px solid var(--glass-bdr);border-radius:12px;
+  padding:10px 14px;gap:5px;
+  flex-direction:column;z-index:50;
+  box-shadow:0 6px 24px rgba(0,0,0,.14);
+}
+#radar-popup.open{display:flex}
+.radar-ctrl-row{display:flex;align-items:center;gap:6px;font-size:var(--fs-sm);color:var(--text-sub)}
+.radar-ctrl-row span.lbl{min-width:40px;font-weight:600}
+.radar-ctrl-row input[type=range]{flex:1;accent-color:var(--accent)}
+.radar-ctrl-row span.val{min-width:14px;text-align:right;color:var(--text);font-weight:700}
+#radar-popup-close{
+  align-self:flex-end;background:none;border:none;
+  font-size:11px;color:var(--text-muted);cursor:pointer;margin-bottom:2px;padding:2px 6px;
+  border-radius:5px;
+}
+#radar-popup-close:hover{background:var(--accent-lt)}
+
+/* Scatter */
+#scatter-wrap{
+  flex:1;min-width:0;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;position:relative;cursor:pointer;
+}
+#scatter-stage{
+  position:relative;
+  width:min(100%,170px);height:min(100%,170px);aspect-ratio:1;
+}
+#scatter-grid{
+  display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(3,1fr);
+  width:100%;height:100%;
+}
+.sg-cell{
+  display:flex;align-items:center;justify-content:center;
+  font-size:var(--fs-xs);font-weight:700;color:var(--text);
+  border:1px solid rgba(37,99,235,.13);
+}
+.sg-cell.cw {background:rgba(255,255,255,.38)}
+[data-theme="dark"] .sg-cell.cw{background:rgba(15,25,50,.38)}
+.sg-cell.c1{background:rgba(219,234,254,.7)}
+[data-theme="dark"] .sg-cell.c1{background:rgba(37,99,235,.14)}
+.sg-cell.c2{background:rgba(147,197,253,.55)}
+[data-theme="dark"] .sg-cell.c2{background:rgba(37,99,235,.30)}
+.sg-cell.c3{background:rgba(59,130,246,.55);color:#fff}
+[data-theme="dark"] .sg-cell.c3{background:rgba(37,99,235,.58);color:#fff}
+.ax-label{position:absolute;font-size:var(--fs-xs);font-weight:700;color:var(--text-sub);pointer-events:none}
+#ax-y{top:-2px;left:-2px}
+#ax-x{bottom:-2px;right:-2px}
+.ax-line{position:absolute;background:rgba(37,99,235,.28);pointer-events:none}
+#axl-y{width:1.5px;top:0;bottom:0;left:-10px}
+#axl-x{height:1.5px;left:0;right:0;bottom:-10px}
+#scatter-dot{
+  position:absolute;width:13px;height:13px;border-radius:50%;
+  background:var(--accent);box-shadow:0 0 0 3px rgba(37,99,235,.28);
+  cursor:grab;transform:translate(-50%,-50%);z-index:10;transition:box-shadow .15s;
+}
+#scatter-dot:active{cursor:grabbing;box-shadow:0 0 0 5px rgba(37,99,235,.4)}
+
+/* scatter popup — also inside card */
+#scatter-popup{
+  display:none;position:absolute;bottom:4px;left:4px;right:4px;
+  background:var(--glass-hdr);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+  border:1px solid var(--glass-bdr);border-radius:12px;
+  padding:8px 14px;gap:5px;flex-direction:column;z-index:50;
+  box-shadow:0 6px 24px rgba(0,0,0,.14);
+}
+#scatter-popup.open{display:flex}
+.scat-ctrl-row{display:flex;align-items:center;gap:6px;font-size:var(--fs-xs);color:var(--text-sub)}
+.scat-ctrl-row span{min-width:40px;font-weight:600}
+.scat-ctrl-row input[type=range]{flex:1;accent-color:var(--accent)}
+#scatter-popup-close{
+  align-self:flex-end;background:none;border:none;
+  font-size:11px;color:var(--text-muted);cursor:pointer;padding:2px 6px;border-radius:5px;
+}
+#scatter-popup-close:hover{background:var(--accent-lt)}
+
+/* wrapper needs relative for popup anchoring */
+.cell-radar .card{position:relative;overflow:visible}
+.cell-radar .card-body{position:relative}
+
+/* ═══════════════════════════════
+   組織圖
+═══════════════════════════════ */
+#org-content{flex:1;display:flex;flex-direction:column;align-items:center;overflow:hidden;min-height:0}
+#org-tree{flex:1;display:flex;flex-direction:column;align-items:center;width:100%;justify-content:flex-start;padding-top:4px}
+.org-level{display:flex;flex-direction:column;align-items:center}
+.org-node{
+  padding:4px 20px;
+  background:var(--accent-lt);border:1px solid rgba(37,99,235,.2);
+  border-radius:8px;font-size:var(--fs-md);font-weight:700;
+  color:var(--text);cursor:text;white-space:nowrap;min-width:88px;text-align:center;
+}
+.org-node.self{background:var(--accent-md);color:var(--accent)}
+/* sub-desc only shown for self and sub-nodes */
+.org-node-sub-desc{
+  font-size:var(--fs-xs);color:var(--text-muted);
+  text-align:center;margin-top:1px;cursor:text;
+}
+/* hide sub-desc on L1/L2 */
+.org-level.no-desc .org-node-sub-desc{display:none}
+.vline{width:1.5px;height:8px;background:rgba(37,99,235,.28);margin:0 auto}
+.hline-wrap{position:relative;width:100%;height:8px}
+.hline-wrap::before{content:'';position:absolute;top:0;left:50%;width:1.5px;height:100%;background:rgba(37,99,235,.28)}
+.hline-wrap::after{content:'';position:absolute;top:50%;left:0;right:0;height:1.5px;background:rgba(37,99,235,.28)}
+#sub-nodes{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+.sub-col{display:flex;flex-direction:column;align-items:center;gap:2px}
+.sub-vline{width:1.5px;height:7px;background:rgba(37,99,235,.28)}
+.sub-node{
+  padding:3px 12px;background:var(--accent-lt);border:1px solid rgba(37,99,235,.15);
+  border-radius:7px;font-size:var(--fs-sm);font-weight:600;color:var(--text-sub);
+  cursor:text;white-space:nowrap;text-align:center;
+}
+.sub-node-desc{font-size:var(--fs-xs);color:var(--text-muted);cursor:text;text-align:center;margin-top:1px}
+#org-footer{
+  flex-shrink:0;padding-top:6px;margin-top:4px;border-top:1px solid var(--divider);
+  display:flex;align-items:center;justify-content:center;gap:8px;
+}
+.sub-btn{
+  width:22px;height:22px;border-radius:50%;
+  background:var(--accent-lt);color:var(--accent);border:none;font-size:16px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;line-height:1;
+}
+#sub-count-label{font-size:var(--fs-xs);color:var(--text-muted)}
+
+/* ═══════════════════════════════
+   崗位匹配
+═══════════════════════════════ */
+#match-body{flex:1;display:flex;gap:6px;min-height:0}
+.match-col{flex:1;min-width:0;display:flex;flex-direction:column;gap:0}
+.match-col-hdr{
+  display:flex;align-items:center;justify-content:center;
+  padding:5px 4px;background:var(--glass-hdr);
+  border-bottom:1px solid var(--divider);
+  font-size:var(--fs-sm);font-weight:700;color:var(--accent);flex-shrink:0;
+}
+.match-items{flex:1;overflow:auto;display:flex;flex-direction:column}
+.match-item{
+  display:flex;align-items:center;gap:6px;
+  padding:3px 8px;border-bottom:1px solid var(--divider);
+}
+.match-item:last-child{border-bottom:none}
+
+/* lamp square — click to cycle */
+.light-sq{
+  width:13px;height:13px;border-radius:3px;flex-shrink:0;
+  cursor:pointer;border:1px solid rgba(0,0,0,.10);transition:box-shadow .12s;
+}
+.light-sq:hover{box-shadow:0 0 0 2px rgba(0,0,0,.15)}
+.sq-red   {background:#ef4444}
+.sq-yellow{background:#eab308}
+.sq-green {background:#22c55e}
+.sq-gray  {background:#9ca3af}
+
+.match-text{flex:1;font-size:var(--fs-md);color:var(--text)}
+.match-col+.match-col{border-left:1px solid var(--divider)}
+
+/* ═══ SETTINGS SIDEBAR ═══ */
+#sidebar-overlay{display:none;position:fixed;inset:0;z-index:299;background:rgba(0,0,0,.13)}
+#sidebar-overlay.show{display:block}
+#sidebar{
+  position:fixed;top:0;right:-280px;width:260px;height:100%;
+  background:var(--glass-hdr);backdrop-filter:blur(24px) saturate(1.5);
+  -webkit-backdrop-filter:blur(24px) saturate(1.5);
+  border-left:1px solid var(--glass-bdr);z-index:300;padding:20px 18px;
+  display:flex;flex-direction:column;gap:18px;
+  transition:right .28s cubic-bezier(.4,0,.2,1);
+  box-shadow:-4px 0 28px rgba(0,0,0,.10);
+}
+#sidebar.open{right:0}
+#sidebar-close{align-self:flex-end;background:none;border:none;font-size:18px;color:var(--text-muted);cursor:pointer}
+.sb-section-title{font-size:var(--fs-xs);font-weight:700;color:var(--text-muted);letter-spacing:.08em;text-transform:uppercase}
+.sb-row{display:flex;align-items:center;justify-content:space-between;font-size:var(--fs-md);color:var(--text)}
+.toggle-switch{position:relative;width:44px;height:24px;cursor:pointer}
+.toggle-switch input{display:none}
+.toggle-track{position:absolute;inset:0;border-radius:999px;background:rgba(37,99,235,.15);transition:background .2s}
+.toggle-switch input:checked+.toggle-track{background:var(--accent)}
+.toggle-knob{position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.2);transition:left .2s}
+.toggle-switch input:checked~.toggle-knob{left:23px}
+#export-btn{width:100%;padding:9px;border-radius:10px;background:var(--accent);color:#fff;border:none;font-size:var(--fs-md);font-weight:700;cursor:pointer;transition:opacity .15s}
+#export-btn:hover{opacity:.85}
+
+::-webkit-scrollbar{width:3px;height:3px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:rgba(37,99,235,.18);border-radius:2px}
 </style>
 </head>
 <body>
 
-<div class="bg-layer"></div>
-<div class="bg-blob bg-blob1"></div>
-<div class="bg-blob bg-blob2"></div>
-<div class="bg-blob bg-blob3"></div>
+<div id="sidebar-overlay"></div>
+<div id="sidebar">
+  <button id="sidebar-close">✕</button>
+  <div class="sb-section-title">外觀</div>
+  <div class="sb-row">
+    <span>深色模式</span>
+    <label class="toggle-switch">
+      <input type="checkbox" id="theme-toggle">
+      <div class="toggle-track"></div>
+      <div class="toggle-knob"></div>
+    </label>
+  </div>
+  <div class="sb-section-title">匯出</div>
+  <button id="export-btn">匯出 HTML 檔案</button>
+</div>
 
-<div class="sidebar-overlay" id="overlay" onclick="closeSidebar()"></div>
-<div class="sidebar" id="sidebar">
-  <div class="sidebar-hdr">
-    <span>設定</span>
-    <button class="sidebar-close" onclick="closeSidebar()">
-      <svg viewBox="0 0 14 14"><line x1="1" y1="1" x2="13" y2="13"/><line x1="13" y1="1" x2="1" y2="13"/></svg>
+<div id="app">
+
+  <!-- PAGE HEADER -->
+  <div id="page-header">
+    <div id="page-header-left">
+      <span id="page-title-zh">人才儀表板</span>
+      <span id="page-title-en">Talent Dashboard</span>
+    </div>
+    <button id="settings-btn" title="設定">
+      <svg viewBox="0 0 24 24">
+        <circle cx="12" cy="12" r="3"/>
+        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+      </svg>
     </button>
   </div>
-  <div class="sidebar-body">
-    <div>
-      <div class="sb-label">顯示主題</div>
-      <div class="toggle-row">
-        <div class="toggle-row-label">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#8aaad0" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
-          <span id="themeLabel">淺色模式</span>
-        </div>
-        <label class="toggle-switch">
-          <input type="checkbox" id="themeToggle" onchange="toggleTheme(this.checked)">
-          <div class="toggle-track"></div>
-        </label>
-      </div>
-    </div>
-    <div>
-      <div class="sb-label">匯出</div>
-      <button class="export-btn" onclick="exportHTML()">
-        <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-        匯出 HTML
-      </button>
-      <div style="font-size:10px;color:#3a5070;margin-top:8px;line-height:1.6;">將所有編輯內容打包為獨立 HTML 下載。</div>
-    </div>
-  </div>
-</div>
 
-<div class="lamp-menu" id="lampMenu">
-  <div class="lamp-opt green" onclick="setLamp('green')"></div>
-  <div class="lamp-opt yellow" onclick="setLamp('yellow')"></div>
-  <div class="lamp-opt red" onclick="setLamp('red')"></div>
-  <div class="lamp-opt gray" onclick="setLamp('gray')"></div>
-  <div class="lamp-opt none" onclick="setLamp('none')"></div>
-</div>
+  <!-- TOP ROW -->
+  <div class="row row-top">
 
-<!-- Header -->
-<div class="dash-header">
-  <div class="hdr-title"><div class="hdr-dot"></div>人才儀表板 · Talent Dashboard</div>
-  <button class="settings-btn" onclick="openSidebar()">
-    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-  </button>
-</div>
-
-<div class="dash-body">
-
-  <!-- LEFT COL -->
-  <div class="left-col">
-
-    <!-- 人才介紹 -->
-    <div class="glass-card panel-intro">
-      <div class="card-hdr">人才介紹</div>
-      <div class="card-body">
-        <div class="pic-area">
-          <div class="pic-wrap" onclick="document.getElementById('fileInput').click()">
-            <span id="avatarEmoji">🧑‍💼</span>
-            <img id="avatarImg" src="" style="display:none"/>
+    <!-- 1. 人才介紹 — no card-hdr title, left=photo+perf, right=details -->
+    <div class="cell-intro">
+      <div class="card">
+        <!-- NO card-hdr (hidden via CSS) -->
+        <div class="card-hdr"><span class="card-title">人才介紹</span></div>
+        <div id="intro-body">
+          <!-- LEFT: photo + perf -->
+          <div id="intro-left">
+            <div id="profile-pic" onclick="document.getElementById('pic-input').click()">👨</div>
+            <input type="file" id="pic-input" accept="image/*">
+            <!-- perf under photo -->
+            <div id="perf-block">
+              <div id="perf-block-label">考績</div>
+              <div id="perf-row">
+                <div class="perf-item">
+                  <span class="perf-yr">2022</span>
+                  <select class="perf-grade"><option>-</option><option>優</option><option>甲</option><option>乙</option><option>丙</option></select>
+                </div>
+                <div class="perf-item">
+                  <span class="perf-yr">2023</span>
+                  <select class="perf-grade"><option>-</option><option>優</option><option>甲</option><option>乙</option><option>丙</option></select>
+                </div>
+                <div class="perf-item">
+                  <span class="perf-yr">2024</span>
+                  <select class="perf-grade"><option>-</option><option>優</option><option>甲</option><option>乙</option><option>丙</option></select>
+                </div>
+              </div>
+            </div>
           </div>
-          <input type="file" id="fileInput" accept="image/*" onchange="uploadPhoto(event)">
-          <span style="font-size:9px;color:var(--text-muted)">點擊上傳照片</span>
-        </div>
-        <div class="f-row">
-          <div class="f-lbl">姓名</div>
-          <input class="edit-inp name-inp center-inp" value="陳小明"/>
-        </div>
-        <div class="f-row">
-          <div class="f-lbl">Major / 專業</div>
-          <input class="edit-inp center-inp" value="資訊管理 / 企業管理"/>
-        </div>
-        <div class="f-row">
-          <div class="f-lbl">組織別</div>
-          <div style="display:flex;flex-direction:column;gap:3px;">
-            <div><button class="org-btn" onclick="toggleOrgEdit()">▸ <span id="orgBtnText">數位轉型處</span></button></div>
-            <input class="org-inp-edit" id="orgInpEdit" value="數位轉型處" onblur="confirmOrg()" onkeydown="if(event.key==='Enter')confirmOrg()"/>
+          <!-- RIGHT: name, major, org, pros/cons -->
+          <div id="intro-details">
+            <div class="grp">
+              <div><span id="talent-name" contenteditable="true">姓名</span></div>
+              <div><span id="talent-major" contenteditable="true">主修</span></div>
+            </div>
+            <div class="grp">
+              <div><span id="talent-org" contenteditable="true">組織別</span></div>
+            </div>
+            <div class="grp" style="flex:1">
+              <div id="pc-list">
+                <div class="pc-item">
+                  <span class="pc-toggle plus" onclick="togglePC(this)">+</span>
+                  <span class="pc-text" contenteditable="true">優勢描述</span>
+                </div>
+                <div class="pc-item">
+                  <span class="pc-toggle minus" onclick="togglePC(this)">−</span>
+                  <span class="pc-text" contenteditable="true">待改善項目</span>
+                </div>
+              </div>
+              <button id="pc-add-btn" onclick="addPC()">＋ 新增</button>
+            </div>
           </div>
         </div>
-        <div class="f-row">
-          <div class="f-lbl">近三年考績</div>
-          <div class="perf-grid" id="perfGrid"></div>
-        </div>
-        <div class="f-row" style="flex:1;min-height:0;">
-          <div class="f-lbl">優缺點分析</div>
-          <div class="pc-list" id="pcList"></div>
-          <button class="pc-add-btn" onclick="addPcItem(true)">＋ 新增條目</button>
-        </div>
       </div>
     </div>
 
-    <!-- 組織圖 -->
-    <div class="glass-card panel-org">
-      <div class="card-hdr">組織圖</div>
-      <div class="card-body">
-        <div class="org-chart" id="orgChart"></div>
-        <button class="add-member-btn" onclick="addL4Member()">＋ 新增管理人員</button>
-      </div>
-    </div>
-
-  </div>
-
-  <!-- TOP RIGHT -->
-  <div class="top-right">
-
-    <!-- 輪崗紀錄 — fixed 5 rows -->
-    <div class="glass-card panel-rot">
-      <div class="card-hdr">人才資訊</div>
-      <div class="card-body">
-        <div class="rot-row"><span class="rot-key">年齡</span><input class="rot-val" placeholder="請輸入…"/></div>
-        <div class="rot-row"><span class="rot-key">年資</span><input class="rot-val" placeholder="請輸入…"/></div>
-        <div class="rot-row"><span class="rot-key">xLOB</span><input class="rot-val" placeholder="請輸入…"/></div>
-        <div class="rot-row"><span class="rot-key">xFun</span><input class="rot-val" placeholder="請輸入…"/></div>
-        <div class="rot-row"><span class="rot-key">行政</span><input class="rot-val" placeholder="請輸入…"/></div>
+    <!-- 輪崗紀錄 -->
+    <div class="cell-rotation">
+      <div class="card">
+        <div class="card-hdr"><span class="card-title">輪崗紀錄</span></div>
+        <div class="card-body">
+          <div id="rotation-list">
+            <div class="rot-item"><span class="rot-label">年齡：</span><span class="rot-val" contenteditable="true" data-ph="請輸入..."></span></div>
+            <div class="rot-item"><span class="rot-label">年資：</span><span class="rot-val" contenteditable="true" data-ph="請輸入..."></span></div>
+            <div class="rot-item"><span class="rot-label">xLOB：</span><span class="rot-val" contenteditable="true" data-ph="請輸入..."></span></div>
+            <div class="rot-item"><span class="rot-label">xFun：</span><span class="rot-val" contenteditable="true" data-ph="請輸入..."></span></div>
+            <div class="rot-item"><span class="rot-label">行政：</span><span class="rot-val" contenteditable="true" data-ph="請輸入..."></span></div>
+          </div>
+        </div>
       </div>
     </div>
 
     <!-- 綜合評比 -->
-    <div class="glass-card panel-radar">
-      <div class="card-hdr">綜合評比</div>
-      <div class="card-body">
-        <div class="radar-top">
+    <div class="cell-radar">
+      <div class="card">
+        <div class="card-hdr"><span class="card-title">綜合評比</span></div>
+        <div class="card-body" style="position:relative;">
 
-          <!-- Radar (smaller, no side labels) -->
-          <div class="radar-section">
-            <div class="radar-canvas-wrap" id="radarWrap" onclick="toggleRadarCtrl()">
-              <canvas id="radarChart"></canvas>
-            </div>
-            <div class="radar-ctrl-panel" id="radarCtrl"></div>
+          <!-- Radar popup anchored inside card -->
+          <div id="radar-popup">
+            <button id="radar-popup-close">關閉 ✕</button>
+            <div class="radar-ctrl-row"><span class="lbl">潛力</span><input type="range" min="0" max="10" value="7" oninput="setRadar(0,+this.value)"><span class="val" id="rv0">7</span></div>
+            <div class="radar-ctrl-row"><span class="lbl">客戶</span><input type="range" min="0" max="10" value="6" oninput="setRadar(1,+this.value)"><span class="val" id="rv1">6</span></div>
+            <div class="radar-ctrl-row"><span class="lbl">預算</span><input type="range" min="0" max="10" value="8" oninput="setRadar(2,+this.value)"><span class="val" id="rv2">8</span></div>
+            <div class="radar-ctrl-row"><span class="lbl">xFun</span><input type="range" min="0" max="10" value="5" oninput="setRadar(3,+this.value)"><span class="val" id="rv3">5</span></div>
+            <div class="radar-ctrl-row"><span class="lbl">xRD</span><input type="range" min="0" max="10" value="7" oninput="setRadar(4,+this.value)"><span class="val" id="rv4">7</span></div>
+            <div class="radar-ctrl-row"><span class="lbl">xLOB</span><input type="range" min="0" max="10" value="6" oninput="setRadar(5,+this.value)"><span class="val" id="rv5">6</span></div>
           </div>
 
-          <div style="width:1px;background:var(--glass-border);flex-shrink:0;margin:2px 0;"></div>
-
-          <!-- Matrix (larger) -->
-          <div class="matrix-section">
-            <div class="matrix-inner-wrap" onclick="toggleScatterCtrl()">
-              <!-- Y axis arrow -->
-              <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;padding-bottom:20px;">
-                <svg width="10" height="30" class="arrow-svg" viewBox="0 0 10 30" stroke-width="1.5" stroke-linecap="round">
-                  <line x1="5" y1="28" x2="5" y2="4"/><polyline points="2,9 5,2 8,9" fill="none"/>
-                </svg>
-                <span style="font-size:9px;color:var(--text-muted);writing-mode:vertical-rl;transform:rotate(180deg);">潛力</span>
-              </div>
-              <!-- Grid + dot -->
-              <div style="flex:1;display:flex;flex-direction:column;gap:2px;min-height:0;position:relative;">
-                <div class="matrix-grid" id="matrixGrid"></div>
-                <div id="matrixDot" class="dot-indicator"></div>
-                <!-- X axis arrow -->
-                <div style="display:flex;align-items:center;justify-content:center;gap:3px;margin-top:3px;">
-                  <span style="font-size:9px;color:var(--text-muted);">績效</span>
-                  <svg width="30" height="10" class="arrow-svg" viewBox="0 0 30 10" stroke-width="1.5" stroke-linecap="round">
-                    <line x1="2" y1="5" x2="26" y2="5"/><polyline points="21,2 28,5 21,8" fill="none"/>
-                  </svg>
+          <div id="radar-scatter-wrap">
+            <div id="radar-wrap" title="點擊調整數值" onclick="openRadarPopup(event)">
+              <svg id="radar-svg" viewBox="0 0 240 210"></svg>
+            </div>
+            <div id="scatter-wrap" title="點擊調整位置" onclick="openScatterPopup(event)">
+              <div id="scatter-stage">
+                <div id="axl-y" class="ax-line"></div>
+                <span id="ax-y" class="ax-label">潛力</span>
+                <div id="scatter-grid">
+                  <div class="sg-cell cw">觀察</div>
+                  <div class="sg-cell c2">潛力</div>
+                  <div class="sg-cell c3">明星</div>
+                  <div class="sg-cell cw">改善</div>
+                  <div class="sg-cell c1">中堅</div>
+                  <div class="sg-cell c2">核心</div>
+                  <div class="sg-cell cw">淘汰</div>
+                  <div class="sg-cell cw">穩定</div>
+                  <div class="sg-cell cw">業務</div>
                 </div>
+                <div id="scatter-dot"></div>
+                <div id="axl-x" class="ax-line"></div>
+                <span id="ax-x" class="ax-label">績效</span>
               </div>
-            </div>
-            <!-- Scatter controls (hidden by default) -->
-            <div class="scatter-ctrl-panel" id="scatterCtrl">
-              <div class="sc-ctrl">
-                <label>績效 X</label>
-                <input type="range" min="1" max="7" value="4" step="1" id="scatterX" oninput="updateDot()">
-                <span id="scatterXV">4</span>
-              </div>
-              <div class="sc-ctrl">
-                <label>潛力 Y</label>
-                <input type="range" min="1" max="7" value="4" step="1" id="scatterY" oninput="updateDot()">
-                <span id="scatterYV">4</span>
+
+              <!-- Scatter popup anchored inside scatter-wrap -->
+              <div id="scatter-popup">
+                <button id="scatter-popup-close">關閉 ✕</button>
+                <div class="scat-ctrl-row"><span>X 績效</span><input type="range" min="0" max="6" value="3" id="dot-x-slider" oninput="updateDotSlider()"></div>
+                <div class="scat-ctrl-row"><span>Y 潛力</span><input type="range" min="0" max="6" value="3" id="dot-y-slider" oninput="updateDotSlider()"></div>
               </div>
             </div>
           </div>
+        </div>
+      </div>
+    </div>
 
+  </div><!-- /row-top -->
+
+  <!-- BOTTOM ROW -->
+  <div class="row row-bot">
+
+    <!-- 組織圖 -->
+    <div class="cell-org">
+      <div class="card">
+        <div class="card-hdr"><span class="card-title">組織圖</span></div>
+        <div class="card-body" style="padding-bottom:0">
+          <div id="org-content">
+            <div id="org-tree">
+              <!-- L1: no desc -->
+              <div class="org-level no-desc">
+                <div class="org-node" contenteditable="true">上級主管</div>
+              </div>
+              <div class="vline"></div>
+              <!-- L2: no desc -->
+              <div class="org-level no-desc">
+                <div class="org-node" contenteditable="true">直屬主管</div>
+              </div>
+              <div class="vline"></div>
+              <!-- L3 self: has desc -->
+              <div class="org-level">
+                <div class="org-node self" contenteditable="true">本人</div>
+                <div class="org-node-sub-desc" contenteditable="true">說明</div>
+              </div>
+              <div class="hline-wrap"></div>
+              <div id="sub-nodes"></div>
+            </div>
+            <div id="org-footer">
+              <button class="sub-btn" onclick="changeSubCount(-1)">−</button>
+              <span id="sub-count-label">3 位部屬</span>
+              <button class="sub-btn" onclick="changeSubCount(1)">+</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 崗位匹配 -->
+    <div class="cell-match">
+      <div class="card" style="padding:0">
+        <div class="card-hdr"><span class="card-title">崗位匹配</span></div>
+        <div id="match-body">
+          <div class="match-col" id="col-was">
+            <div class="match-col-hdr">Was (N-2)</div>
+            <div class="match-items"></div>
+          </div>
+          <div class="match-col" id="col-now">
+            <div class="match-col-hdr">Now (N-1)</div>
+            <div class="match-items"></div>
+          </div>
+          <div class="match-col" id="col-tobe">
+            <div class="match-col-hdr">To Be (N)</div>
+            <div class="match-items"></div>
+          </div>
         </div>
       </div>
     </div>
 
   </div>
 
-  <!-- BOT RIGHT: 崗位匹配 -->
-  <div class="glass-card panel-match bot-right">
-    <div class="card-hdr">崗位匹配</div>
-    <div class="card-body">
-      <div class="match-grid" id="matchGrid"></div>
-    </div>
-  </div>
-
-</div>
+</div><!-- /#app -->
 
 <script>
-/* ===== THEME ===== */
-function toggleTheme(isDark){
-  document.body.classList.toggle('dark',isDark);
-  document.getElementById('themeLabel').textContent=isDark?'深色模式':'淺色模式';
-  if(radarChart) updateRadarChart();
-  setTimeout(updateDot,50);
-}
-function openSidebar(){ document.getElementById('sidebar').classList.add('open'); document.getElementById('overlay').classList.add('open'); }
-function closeSidebar(){ document.getElementById('sidebar').classList.remove('open'); document.getElementById('overlay').classList.remove('open'); }
-
-/* ===== PHOTO ===== */
-function uploadPhoto(e){
-  const f=e.target.files[0]; if(!f) return;
-  const r=new FileReader();
-  r.onload=ev=>{ const img=document.getElementById('avatarImg'); img.src=ev.target.result; img.style.display='block'; document.getElementById('avatarEmoji').style.display='none'; };
-  r.readAsDataURL(f);
-}
-
-/* ===== ORG BTN ===== */
-function toggleOrgEdit(){ const i=document.getElementById('orgInpEdit'); i.classList.toggle('show'); if(i.classList.contains('show')){ i.focus(); i.select(); } }
-function confirmOrg(){ const i=document.getElementById('orgInpEdit'); i.classList.remove('show'); document.getElementById('orgBtnText').textContent=i.value||'未設定'; }
-
-/* ===== 考績 ===== */
-const perfData=[{year:'2022',grade:'甲'},{year:'2023',grade:'甲'},{year:'2024',grade:'乙'}];
-function buildPerf(){
-  const g=document.getElementById('perfGrid'); g.innerHTML='';
-  perfData.forEach((p,i)=>{
-    const c=document.createElement('div'); c.className='perf-cell';
-    c.innerHTML=`<div class="perf-yr">${p.year}</div><select class="perf-sel" onchange="perfData[${i}].grade=this.value">${['優','甲','乙','丙','－'].map(x=>`<option${x===p.grade?' selected':''}>${x}</option>`).join('')}</select>`;
-    g.appendChild(c);
-  });
-}
-buildPerf();
-
-/* ===== PROS CONS ===== */
-let pcItems=[{plus:true,text:'跨部門溝通能力強'},{plus:true,text:'邏輯思維清晰，執行力高'},{plus:false,text:'國際視野仍待拓展'},{plus:false,text:'專案管理經驗有限'}];
-function buildPc(){
-  const el=document.getElementById('pcList'); el.innerHTML='';
-  pcItems.forEach((item,i)=>{
-    const row=document.createElement('div'); row.className='pc-item';
-    row.innerHTML=`<button class="pc-sign-btn ${item.plus?'plus':'minus'}" onclick="togglePcSign(${i})">${item.plus?'+':'−'}</button><input class="pc-text" value="${item.text}" onchange="pcItems[${i}].text=this.value"/><button style="background:none;border:none;cursor:pointer;font-size:10px;color:var(--text-muted);padding:0 2px;" onclick="removePcItem(${i})">✕</button>`;
-    el.appendChild(row);
-  });
-}
-function togglePcSign(i){ pcItems[i].plus=!pcItems[i].plus; buildPc(); }
-function addPcItem(plus){ pcItems.push({plus,text:'新項目'}); buildPc(); }
-function removePcItem(i){ pcItems.splice(i,1); buildPc(); }
-buildPc();
-
-/* ===== ORG CHART ===== */
-let orgL4=[{name:'李佳穎 主任',desc:'數位產品組'},{name:'吳建宏 主任',desc:'資訊架構組'}];
-const orgL1={name:'林志遠 副總',role:'副總經理'};
-const orgL2={name:'張惠君 處長',role:'處長'};
-const orgL3={name:'陳小明 副處長',role:'本人',desc:'數位轉型處'};
-function buildOrg(){
-  const chart=document.getElementById('orgChart'); chart.innerHTML='';
-  const vl=()=>{ const d=document.createElement('div'); d.className='org-vline'; return d; };
-  const mkRow=(box)=>{ const r=document.createElement('div'); r.className='org-row'; r.appendChild(box); return r; };
-  const mkBox=(html,cls='')=>{ const b=document.createElement('div'); b.className='org-box'+(cls?' '+cls:''); b.innerHTML=html; return b; };
-
-  // L1
-  chart.appendChild(mkRow(mkBox(`<input class="org-nm" value="${orgL1.name}" onchange="orgL1.name=this.value"/><input class="org-desc-inp" value="${orgL1.role}" onchange="orgL1.role=this.value"/>`)));
-  chart.appendChild(vl());
-  // L2
-  chart.appendChild(mkRow(mkBox(`<input class="org-nm" value="${orgL2.name}" onchange="orgL2.name=this.value"/><input class="org-desc-inp" value="${orgL2.role}" onchange="orgL2.role=this.value"/>`)));
-  chart.appendChild(vl());
-  // L3 self
-  chart.appendChild(mkRow(mkBox(`<input class="org-nm me" value="${orgL3.name}" onchange="orgL3.name=this.value" style="color:#fff;"/><input class="org-desc-inp" value="${orgL3.desc}" onchange="orgL3.desc=this.value"/>`, 'me')));
-
-  if(orgL4.length>0){
-    chart.appendChild(vl());
-    if(orgL4.length===1){
-      // single node — no hbar
-      const b=mkBox(`<input class="org-nm" value="${orgL4[0].name}" onchange="orgL4[0].name=this.value"/><input class="org-desc-inp" value="${orgL4[0].desc}" onchange="orgL4[0].desc=this.value"/><button class="remove-node-btn" onclick="removeL4(0)">✕</button>`);
-      chart.appendChild(mkRow(b));
-    } else {
-      // hbar spans siblings
-      const pct=Math.round((1-1/orgL4.length)*96);
-      const hbar=document.createElement('div'); hbar.className='org-hbar'; hbar.style.width=pct+'%'; chart.appendChild(hbar);
-      const row=document.createElement('div'); row.className='org-sibling-row'; chart.appendChild(row);
-      orgL4.forEach((m,i)=>{
-        const wrap=document.createElement('div'); wrap.className='org-node-wrap';
-        const nv=document.createElement('div'); nv.className='org-vline'; wrap.appendChild(nv);
-        wrap.appendChild(mkBox(`<input class="org-nm" value="${m.name}" onchange="orgL4[${i}].name=this.value"/><input class="org-desc-inp" value="${m.desc}" onchange="orgL4[${i}].desc=this.value"/><button class="remove-node-btn" onclick="removeL4(${i})">✕</button>`));
-        row.appendChild(wrap);
-      });
-    }
-  }
-}
-function addL4Member(){ orgL4.push({name:'新成員',desc:'職位描述'}); buildOrg(); }
-function removeL4(i){ orgL4.splice(i,1); buildOrg(); }
-buildOrg();
-
-/* ===== RADAR — hexagonal left3/right3 layout, labels at corners ===== */
-// Labels: left side = 潛力(top-left), 客戶(mid-left), 預算(bot-left)
-//         right side = xLOB(top-right), xRD(mid-right), xFun(bot-right)
-// Chart.js radar: index 0 = top, goes clockwise
-// We want a flat-top hexagon (left3, right3):
-// To get left-3 right-3, we rotate so points are at: 210°,150°,90° (left col) and 330°,30°,-30°(right col)
-// Chart.js radar startAngle default=top(-90deg). Points at index i: angle = -90 + i*(360/6)
-// i=0: -90° (top)  -> we actually need left-flat layout
-// For left3/right3: angles should be 150,90,30 (left) and 210,270,330 (right) in math coords
-// Simpler: just assign custom labels and use afterDraw to reposition them
-
-const radarLabels=['潛力','客戶','預算','xFun','xRD','xLOB'];
-const radarValues=[4,3,4,3,5,4];
-let radarChart=null, radarCtrlVisible=false;
-
-function buildRadarCtrl(){
-  const ctrl=document.getElementById('radarCtrl'); ctrl.innerHTML='';
-  radarLabels.forEach((lbl,i)=>{
-    const row=document.createElement('div'); row.className='r-ctrl-row';
-    row.innerHTML=`<span class="r-ctrl-lbl" id="rclbl${i}">${lbl}</span><input type="range" class="r-slider" min="1" max="5" step="1" value="${radarValues[i]}" oninput="radarValues[${i}]=+this.value;document.getElementById('rcv${i}').textContent=this.value;updateRadarChart();"/><span class="r-ctrl-val" id="rcv${i}">${radarValues[i]}</span>`;
-    ctrl.appendChild(row);
-  });
-}
-function toggleRadarCtrl(){ radarCtrlVisible=!radarCtrlVisible; document.getElementById('radarCtrl').classList.toggle('show',radarCtrlVisible); }
-
-function initRadar(){
-  buildRadarCtrl();
-  if(radarChart){ radarChart.destroy(); radarChart=null; }
-  const canvas=document.getElementById('radarChart');
-  const ctx=canvas.getContext('2d');
-  const isDark=document.body.classList.contains('dark');
-  const gc=isDark?'rgba(80,120,220,0.18)':'rgba(96,165,250,0.22)';
-  const tc=isDark?'rgba(180,200,240,0.0)':'rgba(0,0,0,0)'; // hide default ticks
-
-  radarChart=new Chart(ctx,{
-    type:'radar',
-    data:{
-      labels:radarLabels,
-      datasets:[{
-        data:radarValues,
-        borderColor:isDark?'rgba(96,165,250,0.9)':'rgba(26,111,219,0.85)',
-        backgroundColor:isDark?'rgba(59,130,246,0.15)':'rgba(26,111,219,0.1)',
-        pointBackgroundColor:isDark?'#60a5fa':'#1a6fdb',
-        pointRadius:4, borderWidth:2
-      }]
-    },
-    options:{
-      responsive:true, maintainAspectRatio:false,
-      animation:{duration:300},
-      plugins:{ legend:{display:false}, tooltip:{enabled:false} },
-      scales:{r:{
-        min:0, max:5,
-        ticks:{ display:false, stepSize:1, backdropColor:'transparent' },
-        grid:{ color:gc },
-        angleLines:{ color:gc },
-        pointLabels:{ display:false }   // we draw custom labels
-      }}
-    },
-    plugins:[{
-      id:'customLabels',
-      afterDatasetsDraw(chart){
-        const{ctx,chartArea,scales:{r}}=chart;
-        const ds=chart.data.datasets[0];
-        const meta=chart.getDatasetMeta(0);
-        const isDk=document.body.classList.contains('dark');
-        const lblColor=isDk?'rgba(140,180,240,0.95)':'rgba(30,60,130,0.9)';
-        const valColor=isDk?'rgba(147,197,253,1)':'rgba(26,90,200,1)';
-        ctx.save();
-
-        // Draw value numbers near each point
-        meta.data.forEach((pt,i)=>{
-          const val=ds.data[i];
-          const lbl=radarLabels[i];
-          const cx=(chartArea.left+chartArea.right)/2;
-          const cy=(chartArea.top+chartArea.bottom)/2;
-          const dx=pt.x-cx, dy=pt.y-cy;
-          const dist=Math.sqrt(dx*dx+dy*dy);
-          const off=18; // offset beyond the point
-          const nx=pt.x+(dx/dist)*off;
-          const ny=pt.y+(dy/dist)*off;
-
-          // label
-          ctx.fillStyle=lblColor;
-          ctx.font='bold 9px sans-serif';
-          ctx.textAlign=pt.x<cx-5?'right':pt.x>cx+5?'left':'center';
-          ctx.textBaseline='middle';
-          ctx.fillText(lbl,nx,ny-6);
-          // value
-          ctx.fillStyle=valColor;
-          ctx.font='bold 11px sans-serif';
-          ctx.fillText(val,nx,ny+6);
-        });
-        ctx.restore();
-      }
-    }]
-  });
-}
-
-function updateRadarChart(){
-  if(!radarChart) return;
-  const isDark=document.body.classList.contains('dark');
-  const gc=isDark?'rgba(80,120,220,0.18)':'rgba(96,165,250,0.22)';
-  radarChart.data.labels=[...radarLabels];
-  radarChart.data.datasets[0].data=[...radarValues];
-  radarChart.data.datasets[0].borderColor=isDark?'rgba(96,165,250,0.9)':'rgba(26,111,219,0.85)';
-  radarChart.data.datasets[0].backgroundColor=isDark?'rgba(59,130,246,0.15)':'rgba(26,111,219,0.1)';
-  radarChart.options.scales.r.grid.color=gc;
-  radarChart.options.scales.r.angleLines.color=gc;
-  radarChart.update();
-  radarLabels.forEach((_,i)=>{ const el=document.getElementById('rclbl'+i); if(el) el.textContent=radarLabels[i]; });
-}
-
-/* ===== MATRIX — 7x7 dot positioning ===== */
-// cells row0→top, col0→left; text from spec: 觀察,潛力,明星,改善,中堅,核心,淘汰,穩定,業務
-const matrixText=[
-  ['觀察','潛力','明星'],
-  ['改善','中堅','核心'],
-  ['淘汰','穩定','業務']
-];
-const matrixClasses=[['mc-00','mc-01','mc-02'],['mc-10','mc-11','mc-12'],['mc-20','mc-21','mc-22']];
-let scatterCtrlVisible=false;
-
-function buildMatrix(){
-  const grid=document.getElementById('matrixGrid'); grid.innerHTML='';
-  for(let r=0;r<3;r++) for(let c=0;c<3;c++){
-    const cell=document.createElement('div'); cell.className=`mcell ${matrixClasses[r][c]}`;
-    cell.innerHTML=`<input value="${matrixText[r][c]}" onchange="matrixText[${r}][${c}]=this.value" onclick="event.stopPropagation()"/>`;
-    grid.appendChild(cell);
-  }
-}
-
-function toggleScatterCtrl(){ scatterCtrlVisible=!scatterCtrlVisible; document.getElementById('scatterCtrl').classList.toggle('show',scatterCtrlVisible); }
-
-function updateDot(){
-  const x=+document.getElementById('scatterX').value; // 1-7
-  const y=+document.getElementById('scatterY').value; // 1-7
-  document.getElementById('scatterXV').textContent=x;
-  document.getElementById('scatterYV').textContent=y;
-  const grid=document.getElementById('matrixGrid');
-  const dot=document.getElementById('matrixDot');
-  if(!grid||!dot) return;
-  const rect=grid.getBoundingClientRect();
-  if(rect.width===0) return;
-  // Map 1-7 to position within the 3x3 grid (each cell = 1/3 of total)
-  // x: 1→left edge, 7→right edge; within a cell, sub-positions: 1,2,3=left third, 4=mid, 5,6,7=right third
-  // More precisely: normalize 1-7 to 0-1 across the full width
-  const px=((x-1)/6)*rect.width;
-  const py=((7-y)/6)*rect.height;
-  dot.style.left=px+'px';
-  dot.style.top=py+'px';
-  dot.style.display='block';
-}
-
-/* ===== MATCH ===== */
-const stages=[{key:'was',label:'Was (N-2)'},{key:'now',label:'Now (N-1)'},{key:'tobe',label:'To Be (N)'}];
-const defItems=['策略規劃能力','資源整合能力','團隊領導力','跨部門協作','數位化轉型','財務分析能力','風險管理','客戶關係管理','創新提案','國際視野'];
-const matchData={};
-stages.forEach(s=>{ matchData[s.key]=defItems.map(t=>({text:t,lamp:'none'})); });
-let activeLampEl=null,activeLampStage=null,activeLampIdx=null;
-function buildMatch(){
-  const grid=document.getElementById('matchGrid'); grid.innerHTML='';
-  stages.forEach(s=>{
-    const col=document.createElement('div'); col.className='match-col';
-    col.innerHTML=`<div class="match-title">${s.label}</div><div class="match-items" id="mi_${s.key}"></div>`;
-    grid.appendChild(col);
-    const items=col.querySelector(`#mi_${s.key}`);
-    matchData[s.key].forEach((item,i)=>{
-      const row=document.createElement('div'); row.className='match-row';
-      row.innerHTML=`<div class="lamp-sq ${item.lamp}" onclick="openLampMenu(event,this,'${s.key}',${i})"></div><input class="match-inp" value="${item.text}" onchange="matchData['${s.key}'][${i}].text=this.value"/>`;
-      items.appendChild(row);
-    });
-  });
-}
-buildMatch();
-function openLampMenu(e,el,stage,idx){ e.stopPropagation(); activeLampEl=el; activeLampStage=stage; activeLampIdx=idx; const m=document.getElementById('lampMenu'); m.style.top=(e.clientY+6)+'px'; m.style.left=(e.clientX-50)+'px'; m.classList.add('show'); }
-function setLamp(color){ if(!activeLampEl) return; activeLampEl.className=`lamp-sq ${color}`; matchData[activeLampStage][activeLampIdx].lamp=color; document.getElementById('lampMenu').classList.remove('show'); }
-document.addEventListener('click',()=>document.getElementById('lampMenu').classList.remove('show'));
-
-/* ===== INIT ===== */
-window.addEventListener('load',()=>{
-  initRadar();
-  buildMatrix();
-  requestAnimationFrame(()=>requestAnimationFrame(()=>updateDot()));
+/* ═══ PROFILE PIC ═══ */
+document.getElementById('pic-input').addEventListener('change',function(e){
+  const file=e.target.files[0]; if(!file) return;
+  const reader=new FileReader();
+  reader.onload=ev=>{document.getElementById('profile-pic').innerHTML=`<img src="${ev.target.result}" alt="profile">`};
+  reader.readAsDataURL(file);
 });
 
-/* ===== EXPORT ===== */
-function exportHTML(){
-  const el=document.documentElement.cloneNode(true);
-  el.querySelector('#sidebar').classList.remove('open');
-  el.querySelector('#overlay').classList.remove('open');
-  if(document.body.classList.contains('dark')) el.querySelector('body').classList.add('dark');
-  const inputs=document.querySelectorAll('input,textarea,select');
-  const inputEls=el.querySelectorAll('input,textarea,select');
-  inputs.forEach((inp,i)=>{
-    if(!inputEls[i]) return;
-    if(inp.tagName==='SELECT'){ Array.from(inputEls[i].options).forEach(o=>o.selected=false); const s=Array.from(inputEls[i].options).find(o=>o.value===inp.value); if(s) s.selected=true; }
-    else inputEls[i].value=inp.value;
-  });
-  const imgSrc=document.getElementById('avatarImg').src;
-  if(imgSrc&&document.getElementById('avatarImg').style.display!=='none'){ el.querySelector('#avatarImg').src=imgSrc; el.querySelector('#avatarImg').style.display='block'; el.querySelector('#avatarEmoji').style.display='none'; }
-  document.querySelectorAll('.lamp-sq').forEach((l,i)=>{ const le=el.querySelectorAll('.lamp-sq')[i]; if(le) le.className=l.className; });
-  el.querySelector('#orgBtnText').textContent=document.getElementById('orgBtnText').textContent;
-  el.querySelector('#themeToggle').checked=document.getElementById('themeToggle').checked;
-  const html='<!DOCTYPE html>\n'+el.outerHTML;
-  const blob=new Blob([html],{type:'text/html'});
-  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='talent-dashboard.html'; a.click(); URL.revokeObjectURL(a.href);
+/* ═══ PROS & CONS ═══ */
+function togglePC(el){
+  if(el.classList.contains('plus')){el.classList.replace('plus','minus');el.textContent='−'}
+  else{el.classList.replace('minus','plus');el.textContent='+'}
 }
+function addPC(){
+  const list=document.getElementById('pc-list');
+  const item=document.createElement('div'); item.className='pc-item';
+  item.innerHTML=`<span class="pc-toggle plus" onclick="togglePC(this)">+</span><span class="pc-text" contenteditable="true">輸入內容</span>`;
+  list.appendChild(item);
+}
+
+/* ═══ RADAR ═══
+   Flat-top hex: left-3 (top-left, mid-left, bot-left) right-3 (top-right, mid-right, bot-right)
+   Angles for flat-top (pointy sides):
+     left col (from top to bot): 210°, 270°(=left), 330°
+     right col (from top to bot): 150°, 90°(=right), 30°
+   But we want left3=潛力,客戶,預算 and right3=xFun,xRD,xLOB
+   Assignment: i=0 → 210° (top-left)=潛力, i=1 → 270°(mid-left)=客戶, i=2 → 330°(bot-left)=預算
+               i=3 → 30°(bot-right)=xFun, i=4 → 90°(mid-right)=xRD, i=5 → 150°(top-right)=xLOB
+   Then rotate the whole hex 45°: add 45° to each angle
+*/
+const radarVals=[7,6,8,5,7,6];
+const radarLabels=['潛力','客戶','預算','xFun','xRD','xLOB'];
+const cx=120, cy=105, R=68;
+// flat-top angles + 45° rotation
+const baseAngles=[210,270,330,30,90,150];
+const angles=baseAngles.map(d=>(d+45)*Math.PI/180);
+
+function hexPt(i,r){ return [cx+r*Math.cos(angles[i]), cy+r*Math.sin(angles[i])] }
+
+function drawRadar(){
+  const svg=document.getElementById('radar-svg');
+  const dark=document.documentElement.dataset.theme==='dark';
+  const gc=dark?'rgba(96,165,250,.15)':'rgba(37,99,235,.12)';
+  const fc=dark?'rgba(96,165,250,.22)':'rgba(37,99,235,.18)';
+  const sc=dark?'#60a5fa':'#2563eb';
+  const tc=dark?'#94afd4':'#4a5c80';
+  const vc=dark?'#e2eafc':'#1a2540';
+  let h='';
+  // grid rings
+  for(let r=2;r<=10;r+=2){
+    const pts=angles.map((_,i)=>hexPt(i,R*(r/10)).join(',')).join(' ');
+    h+=`<polygon points="${pts}" fill="none" stroke="${gc}" stroke-width="1"/>`;
+  }
+  // spokes
+  for(let i=0;i<6;i++){
+    const [x,y]=hexPt(i,R);
+    h+=`<line x1="${cx}" y1="${cy}" x2="${x}" y2="${y}" stroke="${gc}" stroke-width="1"/>`;
+  }
+  // data polygon
+  const dp=radarVals.map((v,i)=>hexPt(i,R*(v/10)).join(',')).join(' ');
+  h+=`<polygon points="${dp}" fill="${fc}" stroke="${sc}" stroke-width="2"/>`;
+  // labels — larger font
+  for(let i=0;i<6;i++){
+    const [lx,ly]=hexPt(i,R+20);
+    const [vx,vy]=hexPt(i,R+36);
+    const anc=lx<cx-5?'end':lx>cx+5?'start':'middle';
+    h+=`<text x="${lx}" y="${ly}" text-anchor="${anc}" font-size="13" fill="${tc}" font-weight="700">${radarLabels[i]}</text>`;
+    h+=`<text x="${vx}" y="${vy}" text-anchor="${anc}" font-size="14" fill="${vc}" font-weight="800">${radarVals[i]}</text>`;
+  }
+  svg.innerHTML=h;
+}
+
+function setRadar(idx,val){
+  radarVals[idx]=val;
+  document.getElementById('rv'+idx).textContent=val;
+  drawRadar();
+}
+
+function openRadarPopup(e){
+  e.stopPropagation();
+  const p=document.getElementById('radar-popup');
+  p.classList.toggle('open');
+}
+document.getElementById('radar-popup-close').addEventListener('click',e=>{
+  e.stopPropagation();
+  document.getElementById('radar-popup').classList.remove('open');
+});
+
+/* ═══ SCATTER ═══ */
+let dotPx=3,dotPy=3;
+function positionDot(){
+  const grid=document.getElementById('scatter-grid');
+  const dot=document.getElementById('scatter-dot');
+  const stage=document.getElementById('scatter-stage');
+  const gr=grid.getBoundingClientRect();
+  const sr=stage.getBoundingClientRect();
+  dot.style.left=(gr.left-sr.left+(dotPx/6)*gr.width)+'px';
+  dot.style.top =(gr.top -sr.top +(dotPy/6)*gr.height)+'px';
+}
+function updateDotSlider(){
+  dotPx=+document.getElementById('dot-x-slider').value;
+  dotPy=+document.getElementById('dot-y-slider').value;
+  positionDot();
+}
+const dotEl=document.getElementById('scatter-dot');
+let dragging=false,dsx,dsy,dpx0,dpy0;
+dotEl.addEventListener('mousedown',e=>{dragging=true;dsx=e.clientX;dsy=e.clientY;dpx0=dotPx;dpy0=dotPy;e.preventDefault();e.stopPropagation()});
+document.addEventListener('mousemove',e=>{
+  if(!dragging) return;
+  const gr=document.getElementById('scatter-grid').getBoundingClientRect();
+  dotPx=Math.max(0,Math.min(6,dpx0+(e.clientX-dsx)/gr.width*6));
+  dotPy=Math.max(0,Math.min(6,dpy0+(e.clientY-dsy)/gr.height*6));
+  document.getElementById('dot-x-slider').value=dotPx;
+  document.getElementById('dot-y-slider').value=dotPy;
+  positionDot();
+});
+document.addEventListener('mouseup',()=>{dragging=false});
+
+function openScatterPopup(e){
+  e.stopPropagation();
+  const p=document.getElementById('scatter-popup');
+  p.classList.toggle('open');
+}
+document.getElementById('scatter-popup-close').addEventListener('click',e=>{
+  e.stopPropagation();
+  document.getElementById('scatter-popup').classList.remove('open');
+});
+
+// close popups on outside click
+document.addEventListener('click',()=>{
+  document.getElementById('radar-popup').classList.remove('open');
+  document.getElementById('scatter-popup').classList.remove('open');
+});
+document.getElementById('radar-popup').addEventListener('click',e=>e.stopPropagation());
+document.getElementById('scatter-popup').addEventListener('click',e=>e.stopPropagation());
+
+/* ═══ ORG CHART ═══ */
+let subCount=3;
+const subNames=['部屬甲','部屬乙','部屬丙','部屬丁','部屬戊'];
+const subDescs=['說明','說明','說明','說明','說明'];
+function renderSubNodes(){
+  const wrap=document.getElementById('sub-nodes'); wrap.innerHTML='';
+  for(let i=0;i<subCount;i++){
+    const col=document.createElement('div'); col.className='sub-col';
+    col.innerHTML=`<div class="sub-vline"></div>
+      <div class="sub-node" contenteditable="true">${subNames[i]||'部屬'}</div>
+      <div class="sub-node-desc" contenteditable="true">${subDescs[i]||'說明'}</div>`;
+    col.querySelector('.sub-node').addEventListener('blur',function(){subNames[i]=this.textContent});
+    col.querySelector('.sub-node-desc').addEventListener('blur',function(){subDescs[i]=this.textContent});
+    wrap.appendChild(col);
+  }
+  document.getElementById('sub-count-label').textContent=subCount+' 位部屬';
+}
+function changeSubCount(d){subCount=Math.max(1,Math.min(5,subCount+d));renderSubNodes()}
+
+/* ═══ MATCH COLUMNS ═══ */
+const MATCH_COLS=[{id:'col-was'},{id:'col-now'},{id:'col-tobe'}];
+const SQ_COLORS=['sq-green','sq-yellow','sq-red','sq-gray'];
+
+const MATCH_DATA=[
+  // Was (N-2) — default gray
+  ['專案管理','任務拆解與執行','問題解決','客戶信任度','預算控管成本意識','專案帶領與目標驅動','系統改善','內部資源協調','正向力團隊調動','團隊能力拓展'],
+  // Now (N-1)
+  ['多專案並行管理','戰略轉譯與落地','危機處理與消除','客戶關係維護','預算與成本控制','跨職能協調','流程架構優化','資源配置優先級','團隊梯隊建設','人才選育用留'],
+  // To Be (N)
+  ['資源協調分配','願景形塑與組織文化','系統性預防排除','客戶戰略對齊','運營管理','跨組織協調折衝','變革管理與數位轉型','資源取得與調度','戰略組織設計','接班梯隊選拔育成']
+];
+
+// N-2 defaults to gray; N-1 and N default to gray too (user can click to select)
+const matchState=MATCH_DATA.map((col,ci)=>col.map(t=>({text:t, color:'sq-gray'})));
+
+function buildMatchCol(ci){
+  const list=document.getElementById(MATCH_COLS[ci].id).querySelector('.match-items');
+  list.innerHTML='';
+  matchState[ci].forEach((item,i)=>{
+    const row=document.createElement('div'); row.className='match-item';
+    const sq=document.createElement('div');
+    sq.className='light-sq '+item.color;
+    sq.dataset.ci=ci; sq.dataset.i=i;
+
+    // Click cycles through colors
+    sq.addEventListener('click',function(){
+      const ci2=+this.dataset.ci, ii=+this.dataset.i;
+      const cur=SQ_COLORS.indexOf(matchState[ci2][ii].color);
+      matchState[ci2][ii].color=SQ_COLORS[(cur+1)%SQ_COLORS.length];
+      this.className='light-sq '+matchState[ci2][ii].color;
+    });
+
+    const txt=document.createElement('span');
+    txt.className='match-text'; txt.contentEditable='true'; txt.textContent=item.text;
+    txt.addEventListener('blur',function(){matchState[ci][i].text=this.textContent});
+
+    row.appendChild(sq); row.appendChild(txt);
+    list.appendChild(row);
+  });
+}
+
+/* ═══ SIDEBAR & THEME ═══ */
+document.getElementById('settings-btn').addEventListener('click',()=>{
+  document.getElementById('sidebar').classList.add('open');
+  document.getElementById('sidebar-overlay').classList.add('show');
+});
+function closeSidebar(){
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('sidebar-overlay').classList.remove('show');
+}
+document.getElementById('sidebar-close').addEventListener('click',closeSidebar);
+document.getElementById('sidebar-overlay').addEventListener('click',closeSidebar);
+document.getElementById('theme-toggle').addEventListener('change',function(){
+  document.documentElement.dataset.theme=this.checked?'dark':'light';
+  drawRadar();
+});
+
+/* ═══ EXPORT ═══ */
+document.getElementById('export-btn').addEventListener('click',()=>{
+  const html='<!DOCTYPE html>\n'+document.documentElement.outerHTML;
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([html],{type:'text/html'}));
+  a.download='talent-dashboard.html'; a.click();
+  URL.revokeObjectURL(a.href);
+});
+
+/* ═══ INIT ═══ */
+function init(){
+  drawRadar();
+  renderSubNodes();
+  MATCH_COLS.forEach((_,i)=>buildMatchCol(i));
+  requestAnimationFrame(()=>requestAnimationFrame(positionDot));
+}
+window.addEventListener('load',init);
+window.addEventListener('resize',()=>{positionDot();renderSubNodes()});
 </script>
 </body>
 </html>
