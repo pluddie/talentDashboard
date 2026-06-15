@@ -11,13 +11,13 @@
   --fs-md:   14px;
   --fs-sm:   12px;
   --fs-xs:   11px;
-  --bg:          linear-gradient(135deg,#e8f0fe 0%,#f0f7ff 45%,#e3f0fb 100%);
+  --bg:          #E4EEFD;
   --blur1:       radial-gradient(ellipse at 20% 30%,rgba(99,155,255,.16) 0%,transparent 60%);
   --blur2:       radial-gradient(ellipse at 80% 70%,rgba(130,180,255,.12) 0%,transparent 55%);
-  --glass:       rgba(255,255,255,.60);
-  --glass-hdr:   rgba(255,255,255,.82);
-  --glass-bdr:   rgba(255,255,255,.75);
-  --page-hdr:    rgba(255,255,255,.72);
+  --glass:       rgba(255,255,255,.78);
+  --glass-hdr:   rgba(255,255,255,.92);
+  --glass-bdr:   rgba(255,255,255,.88);
+  --page-hdr:    rgba(255,255,255,.88);
   --text:        #1a2540;
   --text-sub:    #4a5c80;
   --text-muted:  #7a90b8;
@@ -57,7 +57,7 @@ body::before{content:'';position:fixed;inset:0;
 
 /* ═══ LAYOUT SHELL ═══ */
 #app{position:relative;z-index:1;width:100vw;height:100vh;
-  display:flex;flex-direction:column;padding:8px;gap:6px}
+  display:flex;flex-direction:column;padding:16px;gap:6px}
 
 #page-header{
   flex-shrink:0;display:flex;align-items:center;justify-content:space-between;
@@ -66,6 +66,12 @@ body::before{content:'';position:fixed;inset:0;
   border:1px solid var(--glass-bdr);border-radius:14px;
   box-shadow:0 2px 14px rgba(37,99,235,.07);
 }
+
+/* rows */
+.row{display:flex;gap:6px;min-height:0}
+.row-top{flex:45 1 0}
+.row-bot{flex:65 1 0}
+
 #page-header-left{display:flex;align-items:baseline;gap:10px}
 #page-title-zh{font-size:var(--fs-xl);font-weight:800;color:var(--hdr-title);letter-spacing:.03em}
 #page-title-en{font-size:var(--fs-sm);font-weight:600;color:var(--text-muted);letter-spacing:.08em;text-transform:uppercase}
@@ -74,17 +80,12 @@ body::before{content:'';position:fixed;inset:0;
 #settings-btn:hover{background:var(--accent-md)}
 #settings-btn svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 
-/* rows — top taller, bottom shorter */
-.row{display:flex;gap:6px;min-height:0}
-.row-top{flex:46 1 0}
-.row-bot{flex:54 1 0}
-
 /* col widths */
-.cell-intro   {flex:4;min-width:0}
-.cell-rotation{flex:2.2;min-width:0}
-.cell-radar   {flex:3.8;min-width:0}
-.cell-org  {flex:4;min-width:0}
-.cell-match{flex:6;min-width:0}
+.cell-intro   {flex:3.2;min-width:0}
+.cell-rotation{flex:2;min-width:0}
+.cell-radar   {flex:4.8;min-width:0}
+.cell-org  {flex:3.2;min-width:0}
+.cell-match{flex:6.8;min-width:0}
 
 /* ═══ GLASS CARD ═══ */
 .card{height:100%;background:var(--glass);
@@ -102,8 +103,8 @@ body::before{content:'';position:fixed;inset:0;
 [contenteditable="true"]:hover{background:rgba(37,99,235,.07)}
 [contenteditable="true"]:focus{background:rgba(37,99,235,.12)}
 
-.grp{display:flex;flex-direction:column;gap:3px}
-.grp+.grp{margin-top:6px;padding-top:6px;border-top:1px solid var(--divider)}
+.grp{display:flex;flex-direction:column;gap:4px}
+.grp+.grp{margin-top:12px;padding-top:12px;border-top:1px solid var(--divider)}
 
 /* ═══════════════════════════════
    1. 人才介紹 — no card title
@@ -112,11 +113,11 @@ body::before{content:'';position:fixed;inset:0;
 /* Hide card header for intro */
 .cell-intro .card-hdr { display:none; }
 
-#intro-body{display:flex;gap:12px;flex:1;min-height:0;padding:8px 12px}
+#intro-body{display:flex;gap:20px;flex:1;min-height:0;padding:16px 18px}
 
 /* Left col: photo on top, perf below */
 #intro-left{
-  flex-shrink:0;display:flex;flex-direction:column;align-items:center;gap:8px;
+  flex-shrink:0;display:flex;flex-direction:column;align-items:center;gap:10px;
   min-width:80px;
 }
 #profile-pic{
@@ -164,12 +165,6 @@ body::before{content:'';position:fixed;inset:0;
 .pc-toggle.plus {background:rgba(34,197,94,.18);color:#16a34a}
 .pc-toggle.minus{background:rgba(239,68,68,.18);color:#dc2626}
 .pc-text{flex:1;font-size:var(--fs-md);color:var(--text)}
-#pc-add-btn{
-  margin-top:3px;align-self:flex-start;
-  font-size:var(--fs-xs);padding:2px 10px;border-radius:6px;border:none;
-  background:var(--accent-lt);color:var(--accent);cursor:pointer;font-weight:600;
-}
-#pc-add-btn:hover{background:var(--accent-md)}
 
 /* ═══════════════════════════════
    輪崗紀錄
@@ -219,14 +214,19 @@ body::before{content:'';position:fixed;inset:0;
 }
 #radar-popup-close:hover{background:var(--accent-lt)}
 
-/* Scatter */
+/* Scatter / Matrix */
 #scatter-wrap{
   flex:1;min-width:0;display:flex;flex-direction:column;
-  align-items:center;justify-content:center;position:relative;cursor:pointer;
+  align-items:center;justify-content:center;position:relative;
 }
-#scatter-stage{
+#matrix-container{
   position:relative;
-  width:min(100%,170px);height:min(100%,170px);aspect-ratio:1;
+  width:min(100%,180px);height:min(100%,180px);
+  display:flex;align-items:center;justify-content:center;
+}
+#matrix-area{
+  position:relative;
+  width:150px;height:150px;
 }
 #scatter-grid{
   display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(3,1fr);
@@ -245,38 +245,44 @@ body::before{content:'';position:fixed;inset:0;
 [data-theme="dark"] .sg-cell.c2{background:rgba(37,99,235,.30)}
 .sg-cell.c3{background:rgba(59,130,246,.55);color:#fff}
 [data-theme="dark"] .sg-cell.c3{background:rgba(37,99,235,.58);color:#fff}
-.ax-label{position:absolute;font-size:var(--fs-xs);font-weight:700;color:var(--text-sub);pointer-events:none}
-#ax-y{top:-2px;left:-2px}
-#ax-x{bottom:-2px;right:-2px}
-.ax-line{position:absolute;background:rgba(37,99,235,.28);pointer-events:none}
-#axl-y{width:1.5px;top:0;bottom:0;left:-10px}
-#axl-x{height:1.5px;left:0;right:0;bottom:-10px}
+
+/* axis labels */
+#ax-y-label{
+  position:absolute;left:-36px;top:50%;transform:translateY(-50%) rotate(-90deg);
+  font-size:var(--fs-xs);font-weight:700;color:var(--text-sub);white-space:nowrap;pointer-events:none;
+}
+#ax-x-label{
+  position:absolute;bottom:-22px;right:0;
+  font-size:var(--fs-xs);font-weight:700;color:var(--text-sub);white-space:nowrap;pointer-events:none;
+}
+
+/* draggable sliders */
+#bar-y{
+  position:absolute;left:-14px;top:0;height:100%;width:10px;cursor:ns-resize;
+}
+#bar-y-track{position:absolute;left:4px;top:0;bottom:0;width:2px;background:rgba(37,99,235,.2);border-radius:1px}
+#bar-y-thumb{
+  position:absolute;left:0;width:10px;height:10px;border-radius:50%;
+  background:var(--accent);cursor:ns-resize;transform:translateY(-50%);
+  box-shadow:0 0 0 2px rgba(37,99,235,.3);
+}
+#bar-x{
+  position:absolute;bottom:-14px;left:0;width:100%;height:10px;cursor:ew-resize;
+}
+#bar-x-track{position:absolute;top:4px;left:0;right:0;height:2px;background:rgba(37,99,235,.2);border-radius:1px}
+#bar-x-thumb{
+  position:absolute;top:0;width:10px;height:10px;border-radius:50%;
+  background:var(--accent);cursor:ew-resize;transform:translateX(-50%);
+  box-shadow:0 0 0 2px rgba(37,99,235,.3);
+}
 #scatter-dot{
   position:absolute;width:13px;height:13px;border-radius:50%;
   background:var(--accent);box-shadow:0 0 0 3px rgba(37,99,235,.28);
-  cursor:grab;transform:translate(-50%,-50%);z-index:10;transition:box-shadow .15s;
+  transform:translate(-50%,50%);z-index:10;pointer-events:none;
+  transition:left .1s,bottom .1s;
 }
-#scatter-dot:active{cursor:grabbing;box-shadow:0 0 0 5px rgba(37,99,235,.4)}
 
-/* scatter popup — also inside card */
-#scatter-popup{
-  display:none;position:absolute;bottom:4px;left:4px;right:4px;
-  background:var(--glass-hdr);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
-  border:1px solid var(--glass-bdr);border-radius:12px;
-  padding:8px 14px;gap:5px;flex-direction:column;z-index:50;
-  box-shadow:0 6px 24px rgba(0,0,0,.14);
-}
-#scatter-popup.open{display:flex}
-.scat-ctrl-row{display:flex;align-items:center;gap:6px;font-size:var(--fs-xs);color:var(--text-sub)}
-.scat-ctrl-row span{min-width:40px;font-weight:600}
-.scat-ctrl-row input[type=range]{flex:1;accent-color:var(--accent)}
-#scatter-popup-close{
-  align-self:flex-end;background:none;border:none;
-  font-size:11px;color:var(--text-muted);cursor:pointer;padding:2px 6px;border-radius:5px;
-}
-#scatter-popup-close:hover{background:var(--accent-lt)}
-
-/* wrapper needs relative for popup anchoring */
+/* wrapper needs relative for radar popup anchoring */
 .cell-radar .card{position:relative;overflow:visible}
 .cell-radar .card-body{position:relative}
 
@@ -284,35 +290,33 @@ body::before{content:'';position:fixed;inset:0;
    組織圖
 ═══════════════════════════════ */
 #org-content{flex:1;display:flex;flex-direction:column;align-items:center;overflow:hidden;min-height:0}
-#org-tree{flex:1;display:flex;flex-direction:column;align-items:center;width:100%;justify-content:flex-start;padding-top:4px}
+#org-tree{flex:1;display:flex;flex-direction:column;align-items:center;width:100%;justify-content:flex-start;padding-top:4px;overflow:hidden}
 .org-level{display:flex;flex-direction:column;align-items:center}
 .org-node{
-  padding:4px 20px;
+  padding:3px 10px;
   background:var(--accent-lt);border:1px solid rgba(37,99,235,.2);
-  border-radius:8px;font-size:var(--fs-md);font-weight:700;
-  color:var(--text);cursor:text;white-space:nowrap;min-width:88px;text-align:center;
+  border-radius:8px;font-size:var(--fs-sm);font-weight:700;
+  color:var(--text);cursor:text;white-space:nowrap;min-width:72px;max-width:120px;text-align:center;
 }
 .org-node.self{background:var(--accent-md);color:var(--accent)}
-/* sub-desc only shown for self and sub-nodes */
-.org-node-sub-desc{
+.org-node-note{
   font-size:var(--fs-xs);color:var(--text-muted);
-  text-align:center;margin-top:1px;cursor:text;
+  text-align:center;margin-top:2px;cursor:text;min-height:14px;
 }
-/* hide sub-desc on L1/L2 */
-.org-level.no-desc .org-node-sub-desc{display:none}
+.org-level.no-note .org-node-note{display:none}
 .vline{width:1.5px;height:8px;background:rgba(37,99,235,.28);margin:0 auto}
 .hline-wrap{position:relative;width:100%;height:8px}
 .hline-wrap::before{content:'';position:absolute;top:0;left:50%;width:1.5px;height:100%;background:rgba(37,99,235,.28)}
 .hline-wrap::after{content:'';position:absolute;top:50%;left:0;right:0;height:1.5px;background:rgba(37,99,235,.28)}
-#sub-nodes{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
-.sub-col{display:flex;flex-direction:column;align-items:center;gap:2px}
+#sub-nodes{display:flex;gap:4px;justify-content:center;flex-wrap:nowrap;overflow:hidden;width:100%}
+.sub-col{display:flex;flex-direction:column;align-items:center;gap:2px;min-width:0;flex:1}
 .sub-vline{width:1.5px;height:7px;background:rgba(37,99,235,.28)}
 .sub-node{
-  padding:3px 12px;background:var(--accent-lt);border:1px solid rgba(37,99,235,.15);
-  border-radius:7px;font-size:var(--fs-sm);font-weight:600;color:var(--text-sub);
-  cursor:text;white-space:nowrap;text-align:center;
+  padding:2px 4px;background:var(--accent-lt);border:1px solid rgba(37,99,235,.15);
+  border-radius:7px;font-size:var(--fs-xs);font-weight:600;color:var(--text-sub);
+  cursor:text;text-align:center;width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
 }
-.sub-node-desc{font-size:var(--fs-xs);color:var(--text-muted);cursor:text;text-align:center;margin-top:1px}
+.sub-node-note{font-size:var(--fs-xs);color:var(--text-muted);cursor:text;text-align:center;margin-top:1px;width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 #org-footer{
   flex-shrink:0;padding-top:6px;margin-top:4px;border-top:1px solid var(--divider);
   display:flex;align-items:center;justify-content:center;gap:8px;
@@ -342,16 +346,20 @@ body::before{content:'';position:fixed;inset:0;
 }
 .match-item:last-child{border-bottom:none}
 
-/* lamp square — click to cycle */
-.light-sq{
-  width:13px;height:13px;border-radius:3px;flex-shrink:0;
-  cursor:pointer;border:1px solid rgba(0,0,0,.10);transition:box-shadow .12s;
+/* lamp indicator — now a select dropdown */
+.light-sq-wrap{flex-shrink:0;position:relative;width:26px;height:20px}
+.light-dot{
+  width:12px;height:12px;border-radius:50%;flex-shrink:0;
+  border:1px solid rgba(0,0,0,.12);pointer-events:none;
 }
-.light-sq:hover{box-shadow:0 0 0 2px rgba(0,0,0,.15)}
-.sq-red   {background:#ef4444}
-.sq-yellow{background:#eab308}
-.sq-green {background:#22c55e}
-.sq-gray  {background:#9ca3af}
+.light-select{
+  position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;
+  font-size:1px;
+}
+.dot-red   {background:#ef4444}
+.dot-yellow{background:#eab308}
+.dot-green {background:#22c55e}
+.dot-gray  {background:#9ca3af}
 
 .match-text{flex:1;font-size:var(--fs-md);color:var(--text)}
 .match-col+.match-col{border-left:1px solid var(--divider)}
@@ -431,7 +439,10 @@ body::before{content:'';position:fixed;inset:0;
         <div id="intro-body">
           <!-- LEFT: photo + perf -->
           <div id="intro-left">
-            <div id="profile-pic" onclick="document.getElementById('pic-input').click()">👨</div>
+            <div style="position:relative;display:inline-block">
+              <div id="profile-pic" onclick="document.getElementById('pic-input').click()" title="點擊上傳照片">👨</div>
+              <button id="pic-remove-btn" onclick="removePic(event)" title="移除照片" style="display:none;position:absolute;top:-4px;right:-4px;width:18px;height:18px;border-radius:50%;background:#ef4444;color:#fff;border:none;font-size:11px;cursor:pointer;line-height:1;align-items:center;justify-content:center;">✕</button>
+            </div>
             <input type="file" id="pic-input" accept="image/*">
             <!-- perf under photo -->
             <div id="perf-block">
@@ -472,7 +483,7 @@ body::before{content:'';position:fixed;inset:0;
                   <span class="pc-text" contenteditable="true">待改善項目</span>
                 </div>
               </div>
-              <button id="pc-add-btn" onclick="addPC()">＋ 新增</button>
+              <button id="pc-add-btn" onclick="addPC()" style="display:none"></button>
             </div>
           </div>
         </div>
@@ -504,43 +515,46 @@ body::before{content:'';position:fixed;inset:0;
           <!-- Radar popup anchored inside card -->
           <div id="radar-popup">
             <button id="radar-popup-close">關閉 ✕</button>
-            <div class="radar-ctrl-row"><span class="lbl">潛力</span><input type="range" min="0" max="10" value="7" oninput="setRadar(0,+this.value)"><span class="val" id="rv0">7</span></div>
-            <div class="radar-ctrl-row"><span class="lbl">客戶</span><input type="range" min="0" max="10" value="6" oninput="setRadar(1,+this.value)"><span class="val" id="rv1">6</span></div>
-            <div class="radar-ctrl-row"><span class="lbl">預算</span><input type="range" min="0" max="10" value="8" oninput="setRadar(2,+this.value)"><span class="val" id="rv2">8</span></div>
-            <div class="radar-ctrl-row"><span class="lbl">xFun</span><input type="range" min="0" max="10" value="5" oninput="setRadar(3,+this.value)"><span class="val" id="rv3">5</span></div>
-            <div class="radar-ctrl-row"><span class="lbl">xRD</span><input type="range" min="0" max="10" value="7" oninput="setRadar(4,+this.value)"><span class="val" id="rv4">7</span></div>
-            <div class="radar-ctrl-row"><span class="lbl">xLOB</span><input type="range" min="0" max="10" value="6" oninput="setRadar(5,+this.value)"><span class="val" id="rv5">6</span></div>
+            <div class="radar-ctrl-row"><span class="lbl">潛力</span><input type="range" min="0" max="5" step="0.5" value="3.5" oninput="setRadar(0,+this.value)"><span class="val" id="rv0">3.5</span></div>
+            <div class="radar-ctrl-row"><span class="lbl">客戶</span><input type="range" min="0" max="5" step="0.5" value="3" oninput="setRadar(1,+this.value)"><span class="val" id="rv1">3</span></div>
+            <div class="radar-ctrl-row"><span class="lbl">預算</span><input type="range" min="0" max="5" step="0.5" value="4" oninput="setRadar(2,+this.value)"><span class="val" id="rv2">4</span></div>
+            <div class="radar-ctrl-row"><span class="lbl">xFun</span><input type="range" min="0" max="5" step="0.5" value="2.5" oninput="setRadar(3,+this.value)"><span class="val" id="rv3">2.5</span></div>
+            <div class="radar-ctrl-row"><span class="lbl">xRD</span><input type="range" min="0" max="5" step="0.5" value="3.5" oninput="setRadar(4,+this.value)"><span class="val" id="rv4">3.5</span></div>
+            <div class="radar-ctrl-row"><span class="lbl">xLOB</span><input type="range" min="0" max="5" step="0.5" value="3" oninput="setRadar(5,+this.value)"><span class="val" id="rv5">3</span></div>
           </div>
 
           <div id="radar-scatter-wrap">
             <div id="radar-wrap" title="點擊調整數值" onclick="openRadarPopup(event)">
               <svg id="radar-svg" viewBox="0 0 240 210"></svg>
             </div>
-            <div id="scatter-wrap" title="點擊調整位置" onclick="openScatterPopup(event)">
-              <div id="scatter-stage">
-                <div id="axl-y" class="ax-line"></div>
-                <span id="ax-y" class="ax-label">潛力</span>
-                <div id="scatter-grid">
-                  <div class="sg-cell cw">觀察</div>
-                  <div class="sg-cell c2">潛力</div>
-                  <div class="sg-cell c3">明星</div>
-                  <div class="sg-cell cw">改善</div>
-                  <div class="sg-cell c1">中堅</div>
-                  <div class="sg-cell c2">核心</div>
-                  <div class="sg-cell cw">淘汰</div>
-                  <div class="sg-cell cw">穩定</div>
-                  <div class="sg-cell cw">業務</div>
+            <div id="scatter-wrap">
+              <div id="matrix-container">
+                <div id="ax-y-label">潛力 ↑</div>
+                <div id="matrix-area">
+                  <div id="scatter-grid">
+                    <div class="sg-cell cw">觀察</div>
+                    <div class="sg-cell c2">潛力</div>
+                    <div class="sg-cell c3">明星</div>
+                    <div class="sg-cell cw">改善</div>
+                    <div class="sg-cell c1">中堅</div>
+                    <div class="sg-cell c2">核心</div>
+                    <div class="sg-cell cw">淘汰</div>
+                    <div class="sg-cell cw">穩定</div>
+                    <div class="sg-cell cw">業務</div>
+                  </div>
+                  <!-- Y axis bar (left side) -->
+                  <div id="bar-y">
+                    <div id="bar-y-track"></div>
+                    <div id="bar-y-thumb"></div>
+                  </div>
+                  <!-- X axis bar (bottom) -->
+                  <div id="bar-x">
+                    <div id="bar-x-track"></div>
+                    <div id="bar-x-thumb"></div>
+                  </div>
+                  <div id="scatter-dot"></div>
+                  <div id="ax-x-label">績效 →</div>
                 </div>
-                <div id="scatter-dot"></div>
-                <div id="axl-x" class="ax-line"></div>
-                <span id="ax-x" class="ax-label">績效</span>
-              </div>
-
-              <!-- Scatter popup anchored inside scatter-wrap -->
-              <div id="scatter-popup">
-                <button id="scatter-popup-close">關閉 ✕</button>
-                <div class="scat-ctrl-row"><span>X 績效</span><input type="range" min="0" max="6" value="3" id="dot-x-slider" oninput="updateDotSlider()"></div>
-                <div class="scat-ctrl-row"><span>Y 潛力</span><input type="range" min="0" max="6" value="3" id="dot-y-slider" oninput="updateDotSlider()"></div>
               </div>
             </div>
           </div>
@@ -560,20 +574,22 @@ body::before{content:'';position:fixed;inset:0;
         <div class="card-body" style="padding-bottom:0">
           <div id="org-content">
             <div id="org-tree">
-              <!-- L1: no desc -->
-              <div class="org-level no-desc">
+              <!-- L1 -->
+              <div class="org-level no-note">
                 <div class="org-node" contenteditable="true">上級主管</div>
+                <div class="org-node-note" contenteditable="true"></div>
               </div>
               <div class="vline"></div>
-              <!-- L2: no desc -->
-              <div class="org-level no-desc">
+              <!-- L2 -->
+              <div class="org-level no-note">
                 <div class="org-node" contenteditable="true">直屬主管</div>
+                <div class="org-node-note" contenteditable="true"></div>
               </div>
               <div class="vline"></div>
-              <!-- L3 self: has desc -->
+              <!-- L3 self -->
               <div class="org-level">
                 <div class="org-node self" contenteditable="true">本人</div>
-                <div class="org-node-sub-desc" contenteditable="true">說明</div>
+                <div class="org-node-note" contenteditable="true">說明</div>
               </div>
               <div class="hline-wrap"></div>
               <div id="sub-nodes"></div>
@@ -618,9 +634,19 @@ body::before{content:'';position:fixed;inset:0;
 document.getElementById('pic-input').addEventListener('change',function(e){
   const file=e.target.files[0]; if(!file) return;
   const reader=new FileReader();
-  reader.onload=ev=>{document.getElementById('profile-pic').innerHTML=`<img src="${ev.target.result}" alt="profile">`};
+  reader.onload=ev=>{
+    document.getElementById('profile-pic').innerHTML=`<img src="${ev.target.result}" alt="profile">`;
+    const btn=document.getElementById('pic-remove-btn');
+    btn.style.display='flex';
+  };
   reader.readAsDataURL(file);
 });
+function removePic(e){
+  e.stopPropagation();
+  document.getElementById('profile-pic').innerHTML='👨';
+  document.getElementById('pic-remove-btn').style.display='none';
+  document.getElementById('pic-input').value='';
+}
 
 /* ═══ PROS & CONS ═══ */
 function togglePC(el){
@@ -630,26 +656,33 @@ function togglePC(el){
 function addPC(){
   const list=document.getElementById('pc-list');
   const item=document.createElement('div'); item.className='pc-item';
-  item.innerHTML=`<span class="pc-toggle plus" onclick="togglePC(this)">+</span><span class="pc-text" contenteditable="true">輸入內容</span>`;
+  const span=document.createElement('span');
+  span.className='pc-text'; span.contentEditable='true'; span.textContent='';
+  span.addEventListener('keydown',handlePCKeydown);
+  item.innerHTML=`<span class="pc-toggle plus" onclick="togglePC(this)">+</span>`;
+  item.appendChild(span);
   list.appendChild(item);
+  span.focus();
 }
+function handlePCKeydown(e){
+  if(e.key==='Enter'){e.preventDefault();addPC()}
+}
+// attach keydown to existing items
+document.querySelectorAll('.pc-text').forEach(el=>el.addEventListener('keydown',handlePCKeydown));
 
 /* ═══ RADAR ═══
-   Flat-top hex: left-3 (top-left, mid-left, bot-left) right-3 (top-right, mid-right, bot-right)
-   Angles for flat-top (pointy sides):
-     left col (from top to bot): 210°, 270°(=left), 330°
-     right col (from top to bot): 150°, 90°(=right), 30°
-   But we want left3=潛力,客戶,預算 and right3=xFun,xRD,xLOB
-   Assignment: i=0 → 210° (top-left)=潛力, i=1 → 270°(mid-left)=客戶, i=2 → 330°(bot-left)=預算
-               i=3 → 30°(bot-right)=xFun, i=4 → 90°(mid-right)=xRD, i=5 → 150°(top-right)=xLOB
-   Then rotate the whole hex 45°: add 45° to each angle
+   Flat-top hexagon: top edge is horizontal.
+   Vertices of flat-top hex (starting from top-right, going clockwise):
+     30°, 90°, 150°, 210°, 270°, 330°
+   For flat-top with TOP flat, angles are: 0°,60°,120°,180°,240°,300°
+   Labels mapped: top-right=潛力(0°), right=客戶(60°), bot-right=預算(120°),
+                  bot-left=xFun(180°), left=xRD(240°), top-left=xLOB(300°)
 */
-const radarVals=[7,6,8,5,7,6];
+const radarVals=[3.5,3,4,2.5,3.5,3];
 const radarLabels=['潛力','客戶','預算','xFun','xRD','xLOB'];
 const cx=120, cy=105, R=68;
-// flat-top angles + 45° rotation
-const baseAngles=[210,270,330,30,90,150];
-const angles=baseAngles.map(d=>(d+45)*Math.PI/180);
+// flat-top hex: vertices at 30°, 90°, 150°, 210°, 270°, 330° → top is flat
+const angles=[30,90,150,210,270,330].map(d=>d*Math.PI/180);
 
 function hexPt(i,r){ return [cx+r*Math.cos(angles[i]), cy+r*Math.sin(angles[i])] }
 
@@ -662,9 +695,9 @@ function drawRadar(){
   const tc=dark?'#94afd4':'#4a5c80';
   const vc=dark?'#e2eafc':'#1a2540';
   let h='';
-  // grid rings
-  for(let r=2;r<=10;r+=2){
-    const pts=angles.map((_,i)=>hexPt(i,R*(r/10)).join(',')).join(' ');
+  // grid rings (1-5)
+  for(let r=1;r<=5;r++){
+    const pts=angles.map((_,i)=>hexPt(i,R*(r/5)).join(',')).join(' ');
     h+=`<polygon points="${pts}" fill="none" stroke="${gc}" stroke-width="1"/>`;
   }
   // spokes
@@ -673,9 +706,9 @@ function drawRadar(){
     h+=`<line x1="${cx}" y1="${cy}" x2="${x}" y2="${y}" stroke="${gc}" stroke-width="1"/>`;
   }
   // data polygon
-  const dp=radarVals.map((v,i)=>hexPt(i,R*(v/10)).join(',')).join(' ');
+  const dp=radarVals.map((v,i)=>hexPt(i,R*(v/5)).join(',')).join(' ');
   h+=`<polygon points="${dp}" fill="${fc}" stroke="${sc}" stroke-width="2"/>`;
-  // labels — larger font
+  // labels
   for(let i=0;i<6;i++){
     const [lx,ly]=hexPt(i,R+20);
     const [vx,vy]=hexPt(i,R+36);
@@ -687,8 +720,8 @@ function drawRadar(){
 }
 
 function setRadar(idx,val){
-  radarVals[idx]=val;
-  document.getElementById('rv'+idx).textContent=val;
+  radarVals[idx]=Math.min(5,Math.max(0,val));
+  document.getElementById('rv'+idx).textContent=radarVals[idx];
   drawRadar();
 }
 
@@ -701,54 +734,48 @@ document.getElementById('radar-popup-close').addEventListener('click',e=>{
   e.stopPropagation();
   document.getElementById('radar-popup').classList.remove('open');
 });
-
-/* ═══ SCATTER ═══ */
-let dotPx=3,dotPy=3;
-function positionDot(){
-  const grid=document.getElementById('scatter-grid');
-  const dot=document.getElementById('scatter-dot');
-  const stage=document.getElementById('scatter-stage');
-  const gr=grid.getBoundingClientRect();
-  const sr=stage.getBoundingClientRect();
-  dot.style.left=(gr.left-sr.left+(dotPx/6)*gr.width)+'px';
-  dot.style.top =(gr.top -sr.top +(dotPy/6)*gr.height)+'px';
-}
-function updateDotSlider(){
-  dotPx=+document.getElementById('dot-x-slider').value;
-  dotPy=+document.getElementById('dot-y-slider').value;
-  positionDot();
-}
-const dotEl=document.getElementById('scatter-dot');
-let dragging=false,dsx,dsy,dpx0,dpy0;
-dotEl.addEventListener('mousedown',e=>{dragging=true;dsx=e.clientX;dsy=e.clientY;dpx0=dotPx;dpy0=dotPy;e.preventDefault();e.stopPropagation()});
-document.addEventListener('mousemove',e=>{
-  if(!dragging) return;
-  const gr=document.getElementById('scatter-grid').getBoundingClientRect();
-  dotPx=Math.max(0,Math.min(6,dpx0+(e.clientX-dsx)/gr.width*6));
-  dotPy=Math.max(0,Math.min(6,dpy0+(e.clientY-dsy)/gr.height*6));
-  document.getElementById('dot-x-slider').value=dotPx;
-  document.getElementById('dot-y-slider').value=dotPy;
-  positionDot();
-});
-document.addEventListener('mouseup',()=>{dragging=false});
-
-function openScatterPopup(e){
-  e.stopPropagation();
-  const p=document.getElementById('scatter-popup');
-  p.classList.toggle('open');
-}
-document.getElementById('scatter-popup-close').addEventListener('click',e=>{
-  e.stopPropagation();
-  document.getElementById('scatter-popup').classList.remove('open');
-});
-
-// close popups on outside click
-document.addEventListener('click',()=>{
-  document.getElementById('radar-popup').classList.remove('open');
-  document.getElementById('scatter-popup').classList.remove('open');
-});
+document.addEventListener('click',()=>document.getElementById('radar-popup').classList.remove('open'));
 document.getElementById('radar-popup').addEventListener('click',e=>e.stopPropagation());
-document.getElementById('scatter-popup').addEventListener('click',e=>e.stopPropagation());
+
+/* ═══ MATRIX BAR DRAG ═══ */
+// dotRx: 0–1 = left–right (績效), dotRy: 0–1 = bottom–top (潛力)
+let dotRx=0.5, dotRy=0.5;
+
+function updateMatrixDot(){
+  const area=document.getElementById('matrix-area');
+  const dot=document.getElementById('scatter-dot');
+  const xThumb=document.getElementById('bar-x-thumb');
+  const yThumb=document.getElementById('bar-y-thumb');
+  const w=area.clientWidth, h=area.clientHeight;
+  dot.style.left=(dotRx*w)+'px';
+  dot.style.bottom=(dotRy*h)+'px';
+  xThumb.style.left=(dotRx*w)+'px';
+  yThumb.style.top=((1-dotRy)*h)+'px';
+}
+
+(function setupBarDrag(){
+  let activeBar=null;
+  function startDrag(e,bar){activeBar=bar;e.preventDefault()}
+  function onMove(e){
+    if(!activeBar) return;
+    const area=document.getElementById('matrix-area');
+    const r=area.getBoundingClientRect();
+    const cx=(e.touches?e.touches[0].clientX:e.clientX);
+    const cy=(e.touches?e.touches[0].clientY:e.clientY);
+    if(activeBar==='x') dotRx=Math.max(0,Math.min(1,(cx-r.left)/r.width));
+    if(activeBar==='y') dotRy=Math.max(0,Math.min(1,1-(cy-r.top)/r.height));
+    updateMatrixDot();
+  }
+  function endDrag(){activeBar=null}
+  document.getElementById('bar-x-thumb').addEventListener('mousedown',e=>startDrag(e,'x'));
+  document.getElementById('bar-y-thumb').addEventListener('mousedown',e=>startDrag(e,'y'));
+  document.getElementById('bar-x-thumb').addEventListener('touchstart',e=>startDrag(e,'x'),{passive:false});
+  document.getElementById('bar-y-thumb').addEventListener('touchstart',e=>startDrag(e,'y'),{passive:false});
+  document.addEventListener('mousemove',onMove);
+  document.addEventListener('touchmove',onMove,{passive:false});
+  document.addEventListener('mouseup',endDrag);
+  document.addEventListener('touchend',endDrag);
+})();
 
 /* ═══ ORG CHART ═══ */
 let subCount=3;
@@ -760,9 +787,9 @@ function renderSubNodes(){
     const col=document.createElement('div'); col.className='sub-col';
     col.innerHTML=`<div class="sub-vline"></div>
       <div class="sub-node" contenteditable="true">${subNames[i]||'部屬'}</div>
-      <div class="sub-node-desc" contenteditable="true">${subDescs[i]||'說明'}</div>`;
+      <div class="sub-node-note" contenteditable="true">${subDescs[i]||'說明'}</div>`;
     col.querySelector('.sub-node').addEventListener('blur',function(){subNames[i]=this.textContent});
-    col.querySelector('.sub-node-desc').addEventListener('blur',function(){subDescs[i]=this.textContent});
+    col.querySelector('.sub-node-note').addEventListener('blur',function(){subDescs[i]=this.textContent});
     wrap.appendChild(col);
   }
   document.getElementById('sub-count-label').textContent=subCount+' 位部屬';
@@ -771,7 +798,6 @@ function changeSubCount(d){subCount=Math.max(1,Math.min(5,subCount+d));renderSub
 
 /* ═══ MATCH COLUMNS ═══ */
 const MATCH_COLS=[{id:'col-was'},{id:'col-now'},{id:'col-tobe'}];
-const SQ_COLORS=['sq-green','sq-yellow','sq-red','sq-gray'];
 
 const MATCH_DATA=[
   // Was (N-2) — default gray
@@ -782,31 +808,40 @@ const MATCH_DATA=[
   ['資源協調分配','願景形塑與組織文化','系統性預防排除','客戶戰略對齊','運營管理','跨組織協調折衝','變革管理與數位轉型','資源取得與調度','戰略組織設計','接班梯隊選拔育成']
 ];
 
-// N-2 defaults to gray; N-1 and N default to gray too (user can click to select)
-const matchState=MATCH_DATA.map((col,ci)=>col.map(t=>({text:t, color:'sq-gray'})));
+const matchState=MATCH_DATA.map((col)=>col.map(t=>({text:t, color:'gray'})));
+
+const COLOR_MAP={gray:'dot-gray',green:'dot-green',yellow:'dot-yellow',red:'dot-red'};
+const COLOR_LABELS={gray:'灰',green:'綠',yellow:'黃',red:'紅'};
 
 function buildMatchCol(ci){
   const list=document.getElementById(MATCH_COLS[ci].id).querySelector('.match-items');
   list.innerHTML='';
   matchState[ci].forEach((item,i)=>{
     const row=document.createElement('div'); row.className='match-item';
-    const sq=document.createElement('div');
-    sq.className='light-sq '+item.color;
-    sq.dataset.ci=ci; sq.dataset.i=i;
 
-    // Click cycles through colors
-    sq.addEventListener('click',function(){
-      const ci2=+this.dataset.ci, ii=+this.dataset.i;
-      const cur=SQ_COLORS.indexOf(matchState[ci2][ii].color);
-      matchState[ci2][ii].color=SQ_COLORS[(cur+1)%SQ_COLORS.length];
-      this.className='light-sq '+matchState[ci2][ii].color;
+    // dot + hidden select overlay
+    const wrap=document.createElement('div'); wrap.className='light-sq-wrap';
+    const dot=document.createElement('div');
+    dot.className='light-dot '+COLOR_MAP[item.color||'gray'];
+    const sel=document.createElement('select'); sel.className='light-select';
+    sel.title='選擇燈號';
+    ['gray','green','yellow','red'].forEach(c=>{
+      const o=document.createElement('option');
+      o.value=c; o.textContent=COLOR_LABELS[c];
+      if((item.color||'gray')===c) o.selected=true;
+      sel.appendChild(o);
     });
+    sel.addEventListener('change',function(){
+      matchState[ci][i].color=this.value;
+      dot.className='light-dot '+COLOR_MAP[this.value];
+    });
+    wrap.appendChild(dot); wrap.appendChild(sel);
 
     const txt=document.createElement('span');
     txt.className='match-text'; txt.contentEditable='true'; txt.textContent=item.text;
     txt.addEventListener('blur',function(){matchState[ci][i].text=this.textContent});
 
-    row.appendChild(sq); row.appendChild(txt);
+    row.appendChild(wrap); row.appendChild(txt);
     list.appendChild(row);
   });
 }
@@ -841,10 +876,10 @@ function init(){
   drawRadar();
   renderSubNodes();
   MATCH_COLS.forEach((_,i)=>buildMatchCol(i));
-  requestAnimationFrame(()=>requestAnimationFrame(positionDot));
+  requestAnimationFrame(()=>requestAnimationFrame(updateMatrixDot));
 }
 window.addEventListener('load',init);
-window.addEventListener('resize',()=>{positionDot();renderSubNodes()});
+window.addEventListener('resize',()=>{updateMatrixDot();renderSubNodes()});
 </script>
 </body>
 </html>
