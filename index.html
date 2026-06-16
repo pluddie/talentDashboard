@@ -83,8 +83,7 @@ body::before{content:'';position:fixed;inset:0;
   .cell-match   {grid-area:match;   min-height:380px}
 
   .cell-intro,.cell-rotation,.cell-radar,.cell-org,.cell-match{display:flex;flex-direction:column}
-  .cell-intro .card,.cell-rotation .card{height:100%;flex:1}
-  .cell-radar .card,.cell-org .card,.cell-match .card{height:100%;flex:1}
+  .cell-intro .card,.cell-rotation .card,.cell-radar .card,.cell-org .card,.cell-match .card{height:100%;flex:1}
   .card-body{align-items:stretch}
 }
 
@@ -112,8 +111,7 @@ body::before{content:'';position:fixed;inset:0;
   .cell-org     {grid-area:org;     min-height:280px}
   .cell-match   {grid-area:match;   min-height:440px}
   .cell-intro,.cell-rotation,.cell-radar,.cell-org,.cell-match{display:flex;flex-direction:column}
-  .cell-intro .card,.cell-rotation .card{height:100%;flex:1}
-  .cell-radar .card,.cell-org .card,.cell-match .card{height:100%;flex:1}
+  .cell-intro .card,.cell-rotation .card,.cell-radar .card,.cell-org .card,.cell-match .card{height:100%;flex:1}
 }
 
 /* ── PAGE HEADER ── */
@@ -341,11 +339,11 @@ body::before{content:'';position:fixed;inset:0;
 .match-col{flex:1;min-width:0;display:flex;flex-direction:column}
 .match-col+.match-col{border-left:1px solid var(--divider)}
 .match-col-hdr{
-  flex-shrink:0;display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;display:block;text-align:center;
   padding:5px 4px;background:var(--glass-hdr);border-bottom:1px solid var(--divider);
   font-size:var(--fs-sm);font-weight:700;color:var(--accent)}
 .match-items{flex:1;overflow:auto;display:flex;flex-direction:column}
-.match-item{display:flex;align-items:center;gap:6px;
+.match-item{flex:1;display:flex;align-items:center;gap:6px;
   padding:3px 8px;border-bottom:1px solid var(--divider)}
 .match-item:last-child{border-bottom:none}
 .match-text{flex:1;font-size:var(--fs-md);color:var(--text)}
@@ -621,15 +619,15 @@ body::before{content:'';position:fixed;inset:0;
         </div>
         <div id="match-body">
           <div class="match-col" id="col-was">
-            <div class="match-col-hdr">Was (N-2)</div>
+            <div class="match-col-hdr" contenteditable>Was (N-2)</div>
             <div class="match-items"></div>
           </div>
           <div class="match-col" id="col-now">
-            <div class="match-col-hdr">Now (N-1)</div>
+            <div class="match-col-hdr" contenteditable>Now (N-1)</div>
             <div class="match-items"></div>
           </div>
           <div class="match-col" id="col-tobe">
-            <div class="match-col-hdr">To Be (N)</div>
+            <div class="match-col-hdr" contenteditable>To Be (N)</div>
             <div class="match-items"></div>
           </div>
         </div>
@@ -944,72 +942,32 @@ document.getElementById('export-jpg-btn').addEventListener('click', () => {
   const btn = document.getElementById('export-jpg-btn');
   btn.textContent = '擷取中…'; btn.disabled = true;
 
-  // Determine colours based on current theme
-  const dark = document.documentElement.dataset.theme === 'dark';
-  const bgColor  = dark ? '#0b1120' : '#E4EEFD';
-  const blur1    = dark
-    ? {x:0.20,y:0.30,r:'rgba(37,99,235,.22)'}
-    : {x:0.20,y:0.30,r:'rgba(99,155,255,.16)'};
-  const blur2    = dark
-    ? {x:0.80,y:0.70,r:'rgba(96,165,250,.14)'}
-    : {x:0.80,y:0.70,r:'rgba(130,180,255,.12)'};
+  const dark    = document.documentElement.dataset.theme === 'dark';
+  const bgColor = dark ? '#0b1120' : '#E4EEFD';
+  const header  = document.getElementById('page-header');
+  const app     = document.getElementById('app');
 
-  // Capture only the two data rows (everything below the page header)
-  const header   = document.getElementById('page-header');
-  const app      = document.getElementById('app');
-  const appRect  = app.getBoundingClientRect();
-  const hdrRect  = header.getBoundingClientRect();
-  // clip region: start just below the header + its gap
-  const clipTop  = hdrRect.bottom - appRect.top + 6;
-  const clipH    = appRect.height - clipTop;
-  const clipW    = appRect.width;
-  const scale    = 2;
+  // Hide header and collapse its space so top padding matches the other three sides
+  header.style.display = 'none';
 
-  requestAnimationFrame(() => {
+  requestAnimationFrame(() => requestAnimationFrame(() => {
     html2canvas(app, {
-      scale,
+      scale: 2,
       useCORS: true,
       backgroundColor: bgColor,
       logging: false
-    }).then(srcCanvas => {
-      // Build final canvas with correct background + cropped content
-      const out = document.createElement('canvas');
-      out.width  = Math.round(clipW * scale);
-      out.height = Math.round(clipH * scale);
-      const ctx  = out.getContext('2d');
-
-      // 1. Solid background
-      ctx.fillStyle = bgColor;
-      ctx.fillRect(0, 0, out.width, out.height);
-
-      // 2. Radial gradient overlays (matching CSS)
-      function radial(gx, gy, col) {
-        const rw = out.width * 0.6, rh = out.height * 0.6;
-        const cx = gx * out.width, cy = gy * out.height;
-        const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, Math.max(rw, rh));
-        g.addColorStop(0, col); g.addColorStop(1, 'transparent');
-        ctx.fillStyle = g; ctx.fillRect(0, 0, out.width, out.height);
-      }
-      radial(blur1.x, blur1.y, blur1.r);
-      radial(blur2.x, blur2.y, blur2.r);
-
-      // 3. Composite the captured app, shifted up to exclude header
-      ctx.drawImage(srcCanvas,
-        0, Math.round(clipTop * scale),          // source x,y
-        Math.round(clipW * scale), Math.round(clipH * scale),  // source w,h
-        0, 0,                                    // dest x,y
-        out.width, out.height                    // dest w,h
-      );
-
+    }).then(canvas => {
+      header.style.display = '';
       const a = document.createElement('a');
-      a.href = out.toDataURL('image/jpeg', 0.95);
+      a.href = canvas.toDataURL('image/jpeg', 0.95);
       a.download = 'talent-dashboard.jpg';
       a.click();
       btn.textContent = '匯出 JPEG 圖片'; btn.disabled = false;
     }).catch(() => {
+      header.style.display = '';
       btn.textContent = '匯出 JPEG 圖片'; btn.disabled = false;
     });
-  });
+  }));
 });
 
 /* ── INIT ── */
