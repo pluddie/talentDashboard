@@ -263,7 +263,7 @@ body::before{content:'';position:fixed;inset:0;
 [data-theme="dark"] .sg-cell.c3{background:rgba(37,99,235,.58);color:#fff}
 
 /* axis labels */
-#ax-y-label{position:absolute;left:-20px;top:-20px;
+#ax-y-label{position:absolute;left:-28px;top:-20px;
   font-size:var(--fs-xs);font-weight:700;color:var(--text-sub);
   white-space:nowrap;pointer-events:none}
 #ax-x-label{position:absolute;bottom:-22px;right:-28px;
@@ -311,15 +311,11 @@ body::before{content:'';position:fixed;inset:0;
 
 .vline{width:1.5px;height:8px;background:rgba(37,99,235,.28);margin:0 auto}
 
-/* connector between self and sub-nodes */
-#org-connector{position:relative;width:100%;height:20px}
-#org-connector::before{content:'';position:absolute;left:50%;top:0;
-  width:1.5px;height:10px;background:rgba(37,99,235,.28)}
-#org-connector-hbar{position:absolute;top:8px;height:1.5px;background:rgba(37,99,235,.28)}
+/* connector SVG (drawn by JS) */
+#org-connector-svg{height:22px}
 
 #sub-nodes{display:flex;gap:4px;justify-content:center;width:100%;overflow:hidden}
-.sub-col{flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;gap:2px}
-.sub-vline{width:1.5px;height:7px;background:rgba(37,99,235,.28)}
+.sub-col{flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;gap:0}
 .sub-node{
   width:100%;padding:2px 4px;text-align:center;
   background:var(--accent-lt);border:1px solid rgba(37,99,235,.15);border-radius:7px;
@@ -598,7 +594,8 @@ body::before{content:'';position:fixed;inset:0;
                 <div class="org-node self" contenteditable>本人</div>
                 <div class="org-node-note" contenteditable>說明</div>
               </div>
-              <div id="org-connector"><div id="org-connector-hbar"></div></div>
+              <!-- connector SVG drawn by JS -->
+              <svg id="org-connector-svg" style="width:100%;overflow:visible;display:block;flex-shrink:0"></svg>
               <div id="sub-nodes"></div>
             </div>
             <div id="org-footer">
@@ -799,34 +796,63 @@ let subCount = 3;
 const subNames = ['部屬甲','部屬乙','部屬丙','部屬丁','部屬戊'];
 const subDescs = ['說明','說明','說明','說明','說明'];
 
-function positionOrgHbar() {
+const ORG_LINE = 'rgba(37,99,235,.28)';
+const VLINE_H  = 8;   // all vertical segment heights in px (uniform)
+
+function drawOrgConnector() {
+  const svg  = document.getElementById('org-connector-svg');
   const wrap = document.getElementById('sub-nodes');
-  const hbar = document.getElementById('org-connector-hbar');
-  const conn = document.getElementById('org-connector');
   const cols = wrap.querySelectorAll('.sub-col');
-  if (!cols.length) return;
-  const cRect = conn.getBoundingClientRect();
-  const first = cols[0].getBoundingClientRect();
-  const last  = cols[cols.length-1].getBoundingClientRect();
-  const leftX  = first.left + first.width/2 - cRect.left;
-  const rightX = last.left  + last.width/2  - cRect.left;
-  hbar.style.left  = leftX + 'px';
-  hbar.style.width = (rightX - leftX) + 'px';
+  if (!cols.length) { svg.innerHTML = ''; return; }
+
+  const svgRect  = svg.getBoundingClientRect();
+  const wrapRect = wrap.getBoundingClientRect();
+
+  // Centre X of each sub-col, relative to svg left
+  const colCentres = Array.from(cols).map(c => {
+    const r = c.getBoundingClientRect();
+    return r.left + r.width / 2 - svgRect.left;
+  });
+
+  // Centre X of the SVG itself (where the stem from 本人 sits)
+  const stemX = svgRect.width / 2;
+  const hbarY = VLINE_H;               // stem goes top→hbarY
+  const subVY = hbarY + VLINE_H;       // sub vlines go hbarY→subVY (same VLINE_H)
+  const svgH  = subVY;
+
+  svg.setAttribute('height', svgH);
+  svg.setAttribute('viewBox', `0 0 ${svgRect.width} ${svgH}`);
+  svg.innerHTML = '';
+
+  function line(x1,y1,x2,y2) {
+    const el = document.createElementNS('http://www.w3.org/2000/svg','line');
+    el.setAttribute('x1',x1.toFixed(1)); el.setAttribute('y1',y1.toFixed(1));
+    el.setAttribute('x2',x2.toFixed(1)); el.setAttribute('y2',y2.toFixed(1));
+    el.setAttribute('stroke', ORG_LINE);
+    el.setAttribute('stroke-width','1.5');
+    svg.appendChild(el);
+  }
+
+  // Vertical stem from 本人 down to hbar
+  line(stemX, 0, stemX, hbarY);
+  // Horizontal bar across all sub-col centres
+  line(colCentres[0], hbarY, colCentres[colCentres.length-1], hbarY);
+  // Vertical drop from hbar down to each sub-node
+  colCentres.forEach(cx => line(cx, hbarY, cx, subVY));
 }
 
 function renderSubNodes() {
   const wrap = document.getElementById('sub-nodes'); wrap.innerHTML = '';
   for (let i = 0; i < subCount; i++) {
     const col = document.createElement('div'); col.className = 'sub-col';
-    col.innerHTML = `<div class="sub-vline"></div>
-      <div class="sub-node" contenteditable="true">${subNames[i]||'部屬'}</div>
+    col.innerHTML = `<div class="sub-node" contenteditable="true">${subNames[i]||'部屬'}</div>
       <div class="sub-node-note" contenteditable="true">${subDescs[i]||'說明'}</div>`;
     col.querySelector('.sub-node').addEventListener('blur', function() { subNames[i] = this.textContent; });
     col.querySelector('.sub-node-note').addEventListener('blur', function() { subDescs[i] = this.textContent; });
     wrap.appendChild(col);
   }
   document.getElementById('sub-count-label').textContent = subCount + ' 位部屬';
-  requestAnimationFrame(positionOrgHbar);
+  requestAnimationFrame(drawOrgConnector);
 }
 function changeSubCount(d) { subCount = Math.max(1, Math.min(5, subCount+d)); renderSubNodes(); }
 
@@ -917,15 +943,66 @@ document.getElementById('export-jpg-btn').addEventListener('click', () => {
   closeSidebar();
   const btn = document.getElementById('export-jpg-btn');
   btn.textContent = '擷取中…'; btn.disabled = true;
+
+  // Determine colours based on current theme
+  const dark = document.documentElement.dataset.theme === 'dark';
+  const bgColor  = dark ? '#0b1120' : '#E4EEFD';
+  const blur1    = dark
+    ? {x:0.20,y:0.30,r:'rgba(37,99,235,.22)'}
+    : {x:0.20,y:0.30,r:'rgba(99,155,255,.16)'};
+  const blur2    = dark
+    ? {x:0.80,y:0.70,r:'rgba(96,165,250,.14)'}
+    : {x:0.80,y:0.70,r:'rgba(130,180,255,.12)'};
+
+  // Capture only the two data rows (everything below the page header)
+  const header   = document.getElementById('page-header');
+  const app      = document.getElementById('app');
+  const appRect  = app.getBoundingClientRect();
+  const hdrRect  = header.getBoundingClientRect();
+  // clip region: start just below the header + its gap
+  const clipTop  = hdrRect.bottom - appRect.top + 6;
+  const clipH    = appRect.height - clipTop;
+  const clipW    = appRect.width;
+  const scale    = 2;
+
   requestAnimationFrame(() => {
-    html2canvas(document.getElementById('app'), {
-      scale: 2,
+    html2canvas(app, {
+      scale,
       useCORS: true,
-      backgroundColor: null,
+      backgroundColor: bgColor,
       logging: false
-    }).then(canvas => {
+    }).then(srcCanvas => {
+      // Build final canvas with correct background + cropped content
+      const out = document.createElement('canvas');
+      out.width  = Math.round(clipW * scale);
+      out.height = Math.round(clipH * scale);
+      const ctx  = out.getContext('2d');
+
+      // 1. Solid background
+      ctx.fillStyle = bgColor;
+      ctx.fillRect(0, 0, out.width, out.height);
+
+      // 2. Radial gradient overlays (matching CSS)
+      function radial(gx, gy, col) {
+        const rw = out.width * 0.6, rh = out.height * 0.6;
+        const cx = gx * out.width, cy = gy * out.height;
+        const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, Math.max(rw, rh));
+        g.addColorStop(0, col); g.addColorStop(1, 'transparent');
+        ctx.fillStyle = g; ctx.fillRect(0, 0, out.width, out.height);
+      }
+      radial(blur1.x, blur1.y, blur1.r);
+      radial(blur2.x, blur2.y, blur2.r);
+
+      // 3. Composite the captured app, shifted up to exclude header
+      ctx.drawImage(srcCanvas,
+        0, Math.round(clipTop * scale),          // source x,y
+        Math.round(clipW * scale), Math.round(clipH * scale),  // source w,h
+        0, 0,                                    // dest x,y
+        out.width, out.height                    // dest w,h
+      );
+
       const a = document.createElement('a');
-      a.href = canvas.toDataURL('image/jpeg', 0.95);
+      a.href = out.toDataURL('image/jpeg', 0.95);
       a.download = 'talent-dashboard.jpg';
       a.click();
       btn.textContent = '匯出 JPEG 圖片'; btn.disabled = false;
@@ -943,7 +1020,7 @@ function init() {
   requestAnimationFrame(() => requestAnimationFrame(updateMatrixDot));
 }
 window.addEventListener('load', init);
-window.addEventListener('resize', () => { updateMatrixDot(); positionOrgHbar(); });
+window.addEventListener('resize', () => { updateMatrixDot(); drawOrgConnector(); });
 </script>
 </body>
 </html>
