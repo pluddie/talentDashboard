@@ -961,6 +961,18 @@ document.getElementById('export-btn').addEventListener('click', () => {
     /const matchState = MATCH_DATA\.map\(col => col\.map\(t => \(\{text:t, color:'gray'\}\)\)\);/,
     `const matchState = ${JSON.stringify(matchState)};`
   );
+  html = html.replace(
+    /let subCount = \d+;/,
+    `let subCount = ${subCount};`
+  );
+  html = html.replace(
+    /const subNames = \[[^\]]*\];/,
+    `const subNames = ${JSON.stringify(subNames)};`
+  );
+  html = html.replace(
+    /const subDescs = \[[^\]]*\];/,
+    `const subDescs = ${JSON.stringify(subDescs)};`
+  );
 
   const a = document.createElement('a');
   a.href = URL.createObjectURL(new Blob([html], {type:'text/html'}));
