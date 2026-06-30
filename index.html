@@ -932,9 +932,22 @@ document.getElementById('theme-toggle').addEventListener('change', function() {
 
 /* ── EXPORT ── */
 document.getElementById('export-btn').addEventListener('click', () => {
-  // Bake current live state (radar values + matrix dot position) back into
-  // the serialized script source, so dragging the chart handles actually
-  // survives export/reload instead of resetting to the hard-coded defaults.
+  closeSidebar();
+
+  // Sync live DOM state into actual HTML attributes before serializing,
+  // since outerHTML only captures attributes -- not DOM properties like
+  // a <select>'s chosen value, and not JS variables that were never
+  // written back into the page's own attributes/markup.
+  document.querySelectorAll('.perf-grade').forEach(sel => {
+    Array.from(sel.options).forEach(opt => {
+      opt.toggleAttribute('selected', opt.value === sel.value);
+    });
+  });
+
+  // Bake current live state (radar values, matrix dot position, and
+  // match-column swatch colors/text) back into the serialized script
+  // source, so edits actually survive export/reload instead of
+  // resetting to the hard-coded defaults.
   let html = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
   html = html.replace(
     /const radarVals = \[[^\]]*\];/,
@@ -944,6 +957,11 @@ document.getElementById('export-btn').addEventListener('click', () => {
     /let dotRx = [^,]+, dotRy = [^;]+;/,
     `let dotRx = ${dotRx}, dotRy = ${dotRy};`
   );
+  html = html.replace(
+    /const matchState = MATCH_DATA\.map\(col => col\.map\(t => \(\{text:t, color:'gray'\}\)\)\);/,
+    `const matchState = ${JSON.stringify(matchState)};`
+  );
+
   const a = document.createElement('a');
   a.href = URL.createObjectURL(new Blob([html], {type:'text/html'}));
   a.download = 'talent-dashboard.html'; a.click(); URL.revokeObjectURL(a.href);
