@@ -944,35 +944,21 @@ document.getElementById('export-btn').addEventListener('click', () => {
     });
   });
 
-  // Bake current live state (radar values, matrix dot position, and
-  // match-column swatch colors/text) back into the serialized script
-  // source, so edits actually survive export/reload instead of
-  // resetting to the hard-coded defaults.
+  // Bake current live state (radar values, matrix dot position, match-column
+  // swatch colors/text, and org-chart subordinates) back into the serialized
+  // script source, so edits actually survive export/reload instead of
+  // resetting to the hard-coded defaults declared in the script.
+  const STATE_PATTERNS = [
+    [/const radarVals = \[[^\]]*\];/,   () => `const radarVals = [${radarVals.join(', ')}];`],
+    [/let dotRx = [^,]+, dotRy = [^;]+;/, () => `let dotRx = ${dotRx}, dotRy = ${dotRy};`],
+    [/const matchState = MATCH_DATA\.map\(col => col\.map\(t => \(\{text:t, color:'gray'\}\)\)\);/,
+                                         () => `const matchState = ${JSON.stringify(matchState)};`],
+    [/let subCount = \d+;/,             () => `let subCount = ${subCount};`],
+    [/const subNames = \[[^\]]*\];/,    () => `const subNames = ${JSON.stringify(subNames)};`],
+    [/const subDescs = \[[^\]]*\];/,    () => `const subDescs = ${JSON.stringify(subDescs)};`],
+  ];
   let html = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
-  html = html.replace(
-    /const radarVals = \[[^\]]*\];/,
-    `const radarVals = [${radarVals.join(', ')}];`
-  );
-  html = html.replace(
-    /let dotRx = [^,]+, dotRy = [^;]+;/,
-    `let dotRx = ${dotRx}, dotRy = ${dotRy};`
-  );
-  html = html.replace(
-    /const matchState = MATCH_DATA\.map\(col => col\.map\(t => \(\{text:t, color:'gray'\}\)\)\);/,
-    `const matchState = ${JSON.stringify(matchState)};`
-  );
-  html = html.replace(
-    /let subCount = \d+;/,
-    `let subCount = ${subCount};`
-  );
-  html = html.replace(
-    /const subNames = \[[^\]]*\];/,
-    `const subNames = ${JSON.stringify(subNames)};`
-  );
-  html = html.replace(
-    /const subDescs = \[[^\]]*\];/,
-    `const subDescs = ${JSON.stringify(subDescs)};`
-  );
+  STATE_PATTERNS.forEach(([pattern, replacer]) => { html = html.replace(pattern, replacer); });
 
   const a = document.createElement('a');
   a.href = URL.createObjectURL(new Blob([html], {type:'text/html'}));
