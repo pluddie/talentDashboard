@@ -932,8 +932,20 @@ document.getElementById('theme-toggle').addEventListener('change', function() {
 
 /* ── EXPORT ── */
 document.getElementById('export-btn').addEventListener('click', () => {
+  // Bake current live state (radar values + matrix dot position) back into
+  // the serialized script source, so dragging the chart handles actually
+  // survives export/reload instead of resetting to the hard-coded defaults.
+  let html = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
+  html = html.replace(
+    /const radarVals = \[[^\]]*\];/,
+    `const radarVals = [${radarVals.join(', ')}];`
+  );
+  html = html.replace(
+    /let dotRx = [^,]+, dotRy = [^;]+;/,
+    `let dotRx = ${dotRx}, dotRy = ${dotRy};`
+  );
   const a = document.createElement('a');
-  a.href = URL.createObjectURL(new Blob(['<!DOCTYPE html>\n'+document.documentElement.outerHTML], {type:'text/html'}));
+  a.href = URL.createObjectURL(new Blob([html], {type:'text/html'}));
   a.download = 'talent-dashboard.html'; a.click(); URL.revokeObjectURL(a.href);
 });
 
