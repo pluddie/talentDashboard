@@ -425,10 +425,10 @@ body::before{content:'';position:fixed;inset:0;
 .toggle-knob{position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;
   background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.2);transition:left .2s}
 .toggle-switch input:checked~.toggle-knob{left:23px}
-#export-btn,#export-jpg-btn{width:100%;padding:9px;border-radius:10px;
+#export-btn,#export-jpg-btn,#save-local-btn,#load-local-btn,#reset-local-btn{width:100%;padding:9px;border-radius:10px;
   background:var(--accent);color:#fff;border:none;
-  font-size:var(--fs-md);font-weight:700;cursor:pointer;transition:opacity .15s}
-#export-btn:hover,#export-jpg-btn:hover{opacity:.85}
+  font-size:var(--fs-md);font-weight:700;cursor:pointer;transition:opacity .15s;margin-bottom:8px}
+#export-btn:hover,#export-jpg-btn:hover,#save-local-btn:hover,#load-local-btn:hover,#reset-local-btn:hover{opacity:.85}
 
 /* ── SCROLLBAR ── */
 ::-webkit-scrollbar{width:3px;height:3px}
@@ -454,6 +454,11 @@ body::before{content:'';position:fixed;inset:0;
   <div class="sb-section-title">匯出</div>
   <button id="export-btn">匯出 HTML 檔案</button>
   <button id="export-jpg-btn">匯出 JPEG 圖片</button>
+  <div class="sb-section-title">本機暫存（僅存於此瀏覽器）</div>
+  <button id="save-local-btn">本機暫存</button>
+  <button id="load-local-btn">讀取暫存</button>
+  <button id="reset-local-btn" style="background:#fde2e1;color:#c0392b">重置暫存</button>
+  <div id="local-temp-status" style="font-size:11px;opacity:.65;margin-top:4px"></div>
 </div>
 
 <div id="app">
@@ -985,6 +990,7 @@ document.getElementById('export-btn').addEventListener('click', () => {
   const a = document.createElement('a');
   a.href = URL.createObjectURL(new Blob([html], {type:'text/html'}));
   a.download = 'talent-dashboard.html'; a.click(); URL.revokeObjectURL(a.href);
+  tdDirty = false;
 });
 
 document.getElementById('export-jpg-btn').addEventListener('click', () => {
@@ -1020,12 +1026,149 @@ document.getElementById('export-jpg-btn').addEventListener('click', () => {
   }));
 });
 
+/* ── LOCAL TEMP STORAGE (browser-only, manual save/load/reset) ──
+   Nothing here runs automatically. Data is only written to localStorage
+   when the user clicks "本機暫存", and only read back when the user clicks
+   "讀取暫存" — a normal refresh does NOT auto-restore it. */
+const TD_LOCAL_KEY = 'talentDashboard_local_temp_v1';
+
+function tdBuildPCItem(text, isPlus) {
+  const item = document.createElement('div'); item.className = 'pc-item';
+  const tog = document.createElement('span');
+  tog.className = 'pc-toggle ' + (isPlus ? 'plus' : 'minus'); tog.textContent = isPlus ? '+' : '−';
+  tog.onclick = () => togglePC(tog);
+  const txt = document.createElement('span');
+  txt.className = 'pc-text'; txt.contentEditable = 'true'; txt.textContent = text || '';
+  txt.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); addPC(); } });
+  const del = document.createElement('button');
+  del.className = 'pc-del'; del.textContent = '✕'; del.title = '刪除';
+  del.onclick = () => item.remove();
+  item.appendChild(tog); item.appendChild(txt); item.appendChild(del);
+  return item;
+}
+
+function tdBuildSnapshot() {
+  const getTxt = id => { const el = document.getElementById(id); return el ? el.textContent : ''; };
+  return {
+    theme: document.documentElement.dataset.theme || 'light',
+    talentName: getTxt('talent-name'),
+    talentMajor: getTxt('talent-major'),
+    talentOrg: getTxt('talent-org'),
+    perfYrs: Array.from(document.querySelectorAll('.perf-yr')).map(el => el.textContent),
+    perfGrades: Array.from(document.querySelectorAll('.perf-grade')).map(sel => sel.value),
+    pcItems: Array.from(document.querySelectorAll('.pc-item')).map(item => ({
+      text: item.querySelector('.pc-text').textContent,
+      isPlus: item.querySelector('.pc-toggle').classList.contains('plus')
+    })),
+    rotVals: Array.from(document.querySelectorAll('.rot-val')).map(el => el.textContent),
+    orgNodes: Array.from(document.querySelectorAll('.org-node')).map(el => el.textContent),
+    orgNote: (document.querySelector('.org-node-note') || {}).textContent || '',
+    matchHdrs: Array.from(document.querySelectorAll('.match-col-hdr')).map(el => el.textContent),
+    picHtml: document.getElementById('profile-pic').innerHTML,
+    radarVals: radarVals.slice(),
+    dotRx, dotRy,
+    subCount, subNames: subNames.slice(), subDescs: subDescs.slice(),
+    matchState: JSON.parse(JSON.stringify(matchState)),
+    savedAt: new Date().toISOString()
+  };
+}
+
+function tdApplySnapshot(snap) {
+  const setTxt = (id, v) => { const el = document.getElementById(id); if (el && v != null) el.textContent = v; };
+  document.documentElement.dataset.theme = snap.theme || 'light';
+  document.getElementById('theme-toggle').checked = snap.theme === 'dark';
+  setTxt('talent-name', snap.talentName);
+  setTxt('talent-major', snap.talentMajor);
+  setTxt('talent-org', snap.talentOrg);
+  document.querySelectorAll('.perf-yr').forEach((el, i) => { if (snap.perfYrs && snap.perfYrs[i] != null) el.textContent = snap.perfYrs[i]; });
+  document.querySelectorAll('.perf-grade').forEach((sel, i) => { if (snap.perfGrades && snap.perfGrades[i] != null) sel.value = snap.perfGrades[i]; });
+  if (Array.isArray(snap.pcItems)) {
+    const list = document.getElementById('pc-list'); list.innerHTML = '';
+    snap.pcItems.forEach(p => list.appendChild(tdBuildPCItem(p.text, p.isPlus)));
+  }
+  document.querySelectorAll('.rot-val').forEach((el, i) => { if (snap.rotVals && snap.rotVals[i] != null) el.textContent = snap.rotVals[i]; });
+  document.querySelectorAll('.org-node').forEach((el, i) => { if (snap.orgNodes && snap.orgNodes[i] != null) el.textContent = snap.orgNodes[i]; });
+  const noteEl = document.querySelector('.org-node-note'); if (noteEl && snap.orgNote != null) noteEl.textContent = snap.orgNote;
+  document.querySelectorAll('.match-col-hdr').forEach((el, i) => { if (snap.matchHdrs && snap.matchHdrs[i] != null) el.textContent = snap.matchHdrs[i]; });
+  if (snap.picHtml != null) {
+    document.getElementById('profile-pic').innerHTML = snap.picHtml;
+    document.getElementById('pic-remove-btn').style.display = snap.picHtml.includes('<img') ? '' : 'none';
+  }
+  if (Array.isArray(snap.radarVals)) snap.radarVals.forEach((v, i) => { if (i < radarVals.length) radarVals[i] = v; });
+  if (typeof snap.dotRx === 'number') dotRx = snap.dotRx;
+  if (typeof snap.dotRy === 'number') dotRy = snap.dotRy;
+  if (typeof snap.subCount === 'number') subCount = snap.subCount;
+  if (Array.isArray(snap.subNames)) snap.subNames.forEach((v, i) => { if (i < subNames.length) subNames[i] = v; });
+  if (Array.isArray(snap.subDescs)) snap.subDescs.forEach((v, i) => { if (i < subDescs.length) subDescs[i] = v; });
+  if (Array.isArray(snap.matchState)) {
+    snap.matchState.forEach((col, ci) => { if (matchState[ci]) col.forEach((it, i) => { if (matchState[ci][i]) matchState[ci][i] = it; }); });
+  }
+  // Re-render everything that's driven by the JS state above, so the
+  // screen matches the restored data instead of stale DOM.
+  drawRadar();
+  renderSubNodes();
+  MATCH_COLS.forEach((_, i) => buildMatchCol(i));
+  requestAnimationFrame(() => requestAnimationFrame(updateMatrixDot));
+}
+
+function tdLocalTempStatusText() {
+  try {
+    const raw = localStorage.getItem(TD_LOCAL_KEY);
+    if (!raw) return '目前沒有本機暫存資料。';
+    const snap = JSON.parse(raw);
+    return snap.savedAt ? ('上次本機暫存時間：' + new Date(snap.savedAt).toLocaleString()) : '已有本機暫存資料。';
+  } catch (e) { return '目前沒有本機暫存資料。'; }
+}
+function tdRefreshLocalTempStatus() {
+  const el = document.getElementById('local-temp-status');
+  if (el) el.textContent = tdLocalTempStatusText();
+}
+document.getElementById('save-local-btn').addEventListener('click', () => {
+  try {
+    localStorage.setItem(TD_LOCAL_KEY, JSON.stringify(tdBuildSnapshot()));
+    tdDirty = false;
+    tdRefreshLocalTempStatus();
+    alert('已存入本機暫存');
+  } catch (err) { console.error(err); alert('本機暫存失敗'); }
+});
+document.getElementById('load-local-btn').addEventListener('click', () => {
+  const raw = localStorage.getItem(TD_LOCAL_KEY);
+  if (!raw) { alert('尚未有本機暫存資料'); return; }
+  if (!confirm('讀取本機暫存將覆蓋目前畫面上尚未儲存的內容，確定要讀取嗎？')) return;
+  try {
+    const snap = JSON.parse(raw);
+    tdApplySnapshot(snap);
+    tdDirty = false;
+    alert('已讀取本機暫存（' + (snap.savedAt ? new Date(snap.savedAt).toLocaleString() : '') + '）');
+  } catch (err) { console.error(err); alert('讀取失敗，暫存資料可能已損毀'); }
+});
+document.getElementById('reset-local-btn').addEventListener('click', () => {
+  if (!localStorage.getItem(TD_LOCAL_KEY)) { alert('目前沒有本機暫存資料'); return; }
+  if (!confirm('確定要清除本機暫存資料嗎？此動作無法復原（目前畫面上的內容不受影響）。')) return;
+  localStorage.removeItem(TD_LOCAL_KEY);
+  tdRefreshLocalTempStatus();
+  alert('已清除本機暫存資料');
+});
+document.getElementById('settings-btn').addEventListener('click', tdRefreshLocalTempStatus);
+
+/* ── CLOSE / REFRESH WARNING ──
+   This app doesn't track fine-grained "dirty" state per edit, so we warn
+   unconditionally once the page has finished loading — saving to local
+   temp clears the flag until the page reloads again. */
+let tdDirty = true;
+window.addEventListener('beforeunload', e => {
+  if (!tdDirty) return;
+  e.preventDefault();
+  e.returnValue = '';
+});
+
 /* ── INIT ── */
 function init() {
   drawRadar();
   renderSubNodes();
   MATCH_COLS.forEach((_, i) => buildMatchCol(i));
   requestAnimationFrame(() => requestAnimationFrame(updateMatrixDot));
+  tdRefreshLocalTempStatus();
 }
 window.addEventListener('load', init);
 window.addEventListener('resize', () => { updateMatrixDot(); drawOrgConnector(); });
